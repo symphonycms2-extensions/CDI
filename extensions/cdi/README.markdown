@@ -31,5 +31,5 @@ to create a backup of your data in production, and only run the upgrade in maint
 
 ## Version History
 
-### 0.9
+### 0.1.0
 * initial release of this extension, waiting impatiently for your feedback!
