@@ -1,0 +1,39 @@
+// Add the logger to the query function
+public function query($query){
+	
+	...
+	...
+	...
+	
+	$query_hash = md5($query.microtime());
+
+	// ==============================================================
+	// Start database logger
+	// ==============================================================
+		require_once(EXTENSIONS . '/cdi/lib/class.cdilogquery.php');
+		if (class_exists('CdiLogQuery')) CdiLogQuery::log($query);
+	// ==============================================================
+	// End database logger
+	// ==============================================================
+	
+	self::$_log['query'][$query_hash] = array('query' => $query, 'start' => precision_timer());
+	
+	...
+	...
+	...
+}
+
+//Additionally, add RollBack functionality in case of an error (currently unsupported)
+private function __error() {
+	$msg = mysql_error();
+	$errornum = mysql_errno();
+
+	self::$_log['error'][] = array(
+		'query' => $this->_lastQuery,
+		'msg' => $msg,
+		'num' => $errornum
+	);
+
+	if (class_exists('CdiLogQuery')) CdiLogQuery::rollback($this->_lastQuery);
+	throw new DatabaseException(__('MySQL Error (%1$s): %2$s in query "%3$s"', array($errornum, $msg, $this->_lastQuery)), end(self::$_log['error']));
+}
