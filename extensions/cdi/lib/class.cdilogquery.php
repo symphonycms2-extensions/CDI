@@ -22,12 +22,16 @@ class CdiLogQuery {
 	}
 	
 	static function log($query) {
+		// prevent execution on the frontend and check configuration
+		if(!class_exists('Administration')) return;
 		if(Symphony::Configuration()->get('enabled', 'cdi') == 'no') return;
-		if(CdiLogQuery::$isUpdating || strpos($query,"cdi_log") !== false) return;
+		if(Symphony::Configuration()->get('is-slave', 'cdi') == 'yes') return;
 		
 		$tbl_prefix = Symphony::Configuration()->get('tbl_prefix', 'database');
 
 		/* FILTERS */
+		// do not register changes to tbl_cdi_log
+		if (preg_match("/{$tbl_prefix}cdi_log/i", $query)) return;
 		// only structural changes, no SELECT statements
 		if (!preg_match('/^(insert|update|delete|create|drop|alter|rename)/i', $query)) return;
 		// un-tracked tables (sessions, cache, authors)
@@ -41,7 +45,9 @@ class CdiLogQuery {
 		if (!preg_match('/;$/', $query)) $query .= ";";
 		CdiLogQuery::persistQuery($query);
 	}
-	
+
+	//TODO: it would be nice if it would agregate all queries executed on the same timestamp into a single file.
+	//That would also eliminate the need for an "order" field.
 	static function persistQuery($query) {
 		$ts = time();
 
@@ -74,8 +80,18 @@ class CdiLogQuery {
 	static function executeQueries() {
 		//TODO: Performance Measurement to see if it is faster to fetch all rows or to iterate over available scripts 
 		//and query database to see if they have been executed.
-		CdiLogQuery::$isUpdating = true;
 
+		// We should not be processing any queries when the extension is disabled or when we are the Master instance
+		// Check also exists on content page, but just to be sure!
+		if((!class_exists('Administration')) ||
+		   (Symphony::Configuration()->get('enabled', 'cdi') == 'no') ||
+		   (Symphony::Configuration()->get('is-slave', 'cdi') == 'no')) {
+			echo "WARNING: CDI is disabled or you are running the queryies on the Master instance. No queries have been executed.";
+			return;
+		}
+				
+		CdiLogQuery::$isUpdating = true;
+		
 		try {
 			$files = array();
 			if($handle = opendir(MANIFEST . '/cdi/')) {
