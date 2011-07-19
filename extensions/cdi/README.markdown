@@ -39,9 +39,13 @@ to create a backup of your data in production, and only run the upgrade in maint
 
 * Aggregate all queries and save them to a single file (using JSON or XML serialization)
 
-* Implement a rolling file appending strategy to prevent the aggregated SQL files from becoming to large
+* Add automatic backup of current database before executing CDI queries using https://github.com/nils-werner/dump_db
+
+* Add automatic restore of database backup upon query execution errors (including switch to maintenance mode) 
 
 * Add support for DATA changes from the backend
+
+* Implement a rolling file appending strategy to prevent the aggregated SQL files from becoming to large
 
 * Add support for DATA changes from the front-end
 
