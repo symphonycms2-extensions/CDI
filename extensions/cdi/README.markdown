@@ -29,6 +29,22 @@ Although it is designed to assist you with the entire release chain of developme
 Be sure that you have executed the database updates on all environments before going to production. To avoid the risk of database integrity issues, be sure
 to create a backup of your data in production, and only run the upgrade in maintenance mode. This allows you to revert any damage that was caused by this extension.
 
+## Roadmap
+
+* Add rollback support in case of SQL execution errors
+
+* Add status information of the CDI log on the preferences screen
+
+* Add a "clear CDI log" button from the preferences screen
+
+* Aggregate all queries and save them to a single file (using JSON or XML serialization)
+
+* Implement a rolling file appending strategy to prevent the aggregated SQL files from becoming to large
+
+* Add support for DATA changes from the backend
+
+* Add support for DATA changes from the front-end
+
 ## Version History
 
 ### 0.1.0
