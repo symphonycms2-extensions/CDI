@@ -31,6 +31,8 @@ to create a backup of your data in production, and only run the upgrade in maint
 
 ## Roadmap
 
+* Support the same features as the Database Synchroniser extension: a single db_sync.sql file that logs all queries for manual propagating changes to other instances.
+
 * Aggregate all queries and save them to a single file (using JSON or XML serialization)
 
 * Add automatic backup of current database before executing CDI queries using https://github.com/nils-werner/dump_db
