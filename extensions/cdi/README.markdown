@@ -45,6 +45,8 @@ to create a backup of your data in production, and only run the upgrade in maint
 
 * Add support for DATA changes from the front-end
 
+* Add support for active replication (for load-balancing)
+
 ## Version History
 
 ### 0.2.0
