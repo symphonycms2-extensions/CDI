@@ -10,7 +10,7 @@
 				'version'		=> '0.1.0',
 				'release-date'	=> '2011-07-17',
 				'author'		=> array(
-					'name'			=> 'Remie Bolte',
+					'name'			=> 'Remie Bolte, Nick Dunn, Richard Warrender',
 					'email'			=> 'r.bolte@gmail.com'
 				),
 				'description'	=> 'Continuous Database Integration is designed to save and log structural changes to the database, allowing queries to be savely executed on other instances'
@@ -31,6 +31,7 @@
 		
 		public function uninstall() {
 			if($this->__dropTable()) {
+				CdiLogQuery::cleanLogs(true);
 				Symphony::Configuration()->remove('cdi');
 				Administration::instance()->saveConfig();
 				return true;
@@ -108,89 +109,130 @@
 		}
 		
 		public function appendPreferences($context){
-
-			// Clean the database or log files if the cd_clear action was called
+			// Clean the database and log files when the cd_clear action is called
 			if(isset($_POST["action"]["cdi_clear"])) {
-				if(Symphony::Configuration()->get('is-slave', 'cdi') == 'yes') {
-					Symphony::Database()->query('DELETE FROM `tbl_cdi_log`');
-				} else { 
-					CdiLogQuery::cleanLogs();
-				}
+				Symphony::Database()->query('DELETE FROM `tbl_cdi_log`');
+				CdiLogQuery::cleanLogs(false);
+			}
+			
+			// Import the db_sync.sql file when the cdi_import action is called
+			if(isset($_POST["action"]["cdi_import"])) {
+				CdiLogQuery::importSyncFile();
+			}
+			
+			// Capture CDI Mode change event
+			$cdiMode = Symphony::Configuration()->get('cdi-mode', 'cdi');
+			if(empty($cdiMode)) { $cdiMode = 'cdi'; }
+			if(isset($_POST['settings']['cdi']['cdi-mode'])){
+				$cdiMode = $_POST['settings']['cdi']['cdi-mode'];
+				// Although it is not the right place, it is important to persist the selected CDI mode
+				// This can be removed once the post-back has been replaced by client-side switching of CDI mode
+				Symphony::Configuration()->set('cdi-mode', $cdiMode, 'cdi');
+				Administration::instance()->saveConfig();
 			}
 			
 			// Create the Preferences user-interface for the CDI extension
 			$group = new XMLElement('fieldset');
 			$group->setAttribute('class', 'settings');
 			$group->appendChild(new XMLElement('legend', 'Continuous Database Integration'));
-			$group->appendChild(new XMLElement('h3','Instance Mode',array('style' => 'margin-bottom: 5px;')));
 			
-			$div = new XMLElement('div', NULL, array('class' => 'group'));
-
-			//CDI mode
-			$label = Widget::Label();
-			$input = Widget::Input('settings[cdi][is-slave]', 'yes', 'checkbox');
-			if($this->__canBeMasterInstance()) {
-				if($this->_Parent->Configuration->get('is-slave', 'cdi') == 'yes') { $input->setAttribute('checked', 'checked'); }
-				$label->setValue($input->generate() . ' This is a "Slave" instance (no structural changes will be registered)');
+			// CDI Mode
+			// TODO: There is no need to do a post-back for switching CDI mode!
+			// A javascript library needs to be implemented to make this go more smooth
+			$div = new XMLElement('div', NULL);
+			$div->appendChild(new XMLElement('h3','Continuous Integration Mode',array('style' => 'margin-bottom: 5px;')));
+			$options = array();
+			$options[] = array('cdi', ($cdiMode == 'cdi'), 'Continuous Database Integration');
+			$options[] = array('db_sync', ($cdiMode == 'db_sync'), 'Database Synchroniser');
+			$div->appendChild(Widget::Select('settings[cdi][cdi-mode]', $options, array('style' => 'width: 250px;margin-bottom: 12px;', 'onchange' => 'submit();')));
+			if($cdiMode == 'cdi') {
+				$div->appendChild(new XMLElement('p', 'Each individual query is stored to disk in order of execution and can be automatically executed on a slave instance. The CDI extension will register which queries have been executed to prevent duplicate execution.', array('class' => 'help', 'style' => 'margin-bottom: 10px;')));
 			} else {
-				$input->setAttribute('checked', 'checked');
-				$input->setAttribute('disabled', 'disabled');
-				$label->setValue($input->generate() . ' This can only be a "Slave" instance due to insufficient write permissions.');
+				$div->appendChild(new XMLElement('p', 'All queries are stored to disk in a single file. The generated SQL file needs to be manually executed on each slave instance and flushed after upgrading to prevent duplicate execution.', array('class' => 'help', 'style' => 'margin-bottom: 10px;')));
 			}
-			$div->appendChild($label);
-			
 			$group->appendChild($div);
-			$group->appendChild(new XMLElement('p', 'The Continuous Database Integration (CDI) extension aims on enabling the automation of propagating structural changes between environments in a DTAP setup.
-													 It is imperitive that you have a single "Master" instance (usually the development environment from which the changes are captured). This is important because the autonumbers need to be exactly the same on each database. 
-													 Be carefull about the database integrity and only switch instance mode after you have ensured that you have restored all databases from the same source.', array('class' => 'help')));
-			
-			// Clear CDI logs
-			$div = new XMLElement('div', NULL);//, array('class' => 'group'));
-			
-			$entries = new XMLElement('div',NULL);
 
-			$entryCount = 0;
-			if(Symphony::Configuration()->get('is-slave', 'cdi') == 'yes') {
-				$entries->appendChild(new XMLElement('h3','The last 5 queries executed',array('style' => 'margin-bottom: 5px;')));
-				$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
-				$cdiLogEntries = Symphony::Database()->fetch("SELECT * FROM tbl_cdi_log ORDER BY `date` DESC LIMIT 0,5");
-				if(count($cdiLogEntries) > 0) {
-					foreach($cdiLogEntries as $entry) {
-						$tr = new XMLElement('tr',null);
-						$tr->appendChild(new XMLElement('td',$entry['date'],array('width' => '150')));
-						$tr->appendChild(new XMLElement('td',$entry['author']),array('width' => '200'));
-						$tr->appendChild(new XMLElement('td',$entry['query_hash']));
-						$table->appendChild($tr);
-						$entryCount++;
-					}
+			if($cdiMode == 'cdi') {
+				//Instance mode
+				$div = new XMLElement('div', NULL);
+				$div->appendChild(new XMLElement('h3','Instance Mode',array('style' => 'margin: 5px 0;')));
+				$label = Widget::Label();
+				$input = Widget::Input('settings[cdi][is-slave]', 'yes', 'checkbox');
+				if($this->__canBeMasterInstance()) {
+					if($this->_Parent->Configuration->get('is-slave', 'cdi') == 'yes') { $input->setAttribute('checked', 'checked'); }
+					$label->setValue($input->generate() . ' This is a "Slave" instance (no structural changes will be registered)');
 				} else {
-					$tr = new XMLElement('tr',null);
-					$tr->appendChild(new XMLElement('td','No CDI queries have been executed'));
-					$table->appendChild($tr);
+					$input->setAttribute('checked', 'checked');
+					$input->setAttribute('disabled', 'disabled');
+					$label->setValue($input->generate() . ' This can only be a "Slave" instance due to insufficient write permissions.');
 				}
-				$entries->appendChild($table);
+				$div->appendChild($label);
+				$div->appendChild(new XMLElement('p', 'The Continuous Database Integration (CDI) extension aims on enabling the automation of propagating structural changes between environments in a DTAP setup.
+														 It is imperitive that you have a single "Master" instance (usually the development environment from which the changes are captured). This is important because the autonumbers need to be exactly the same on each database. 
+														 Be carefull about the database integrity and only switch instance mode after you have ensured that you have restored all databases from the same source.', array('class' => 'help')));
+				$group->appendChild($div);
+				
+				// Clear CDI logs
+				$div = new XMLElement('div', NULL);
+				$entries = new XMLElement('div',NULL);
+	
+				$entryCount = 0;
+				if(Symphony::Configuration()->get('is-slave', 'cdi') == 'yes') {
+					$entries->appendChild(new XMLElement('h3','The last 5 queries executed',array('style' => 'margin-bottom: 5px;')));
+					$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
+					$cdiLogEntries = Symphony::Database()->fetch("SELECT * FROM tbl_cdi_log ORDER BY `date` DESC LIMIT 0,5");
+					if(count($cdiLogEntries) > 0) {
+						foreach($cdiLogEntries as $entry) {
+							$tr = new XMLElement('tr',null);
+							$tr->appendChild(new XMLElement('td',$entry['date'],array('width' => '150')));
+							$tr->appendChild(new XMLElement('td',$entry['author']),array('width' => '200'));
+							$tr->appendChild(new XMLElement('td',$entry['query_hash']));
+							$table->appendChild($tr);
+							$entryCount++;
+						}
+					} else {
+						$tr = new XMLElement('tr',null);
+						$tr->appendChild(new XMLElement('td','No CDI queries have been executed'));
+						$table->appendChild($tr);
+					}
+					$entries->appendChild($table);
+				} else {
+					$entries->appendChild(new XMLElement('h3','The last 5 queries logged',array('style' => 'margin-bottom: 5px;')));
+					$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
+					$cdiLogEntries = CdiLogQuery::getCdiLogFiles();
+					if(count($cdiLogEntries) > 0) {
+						rsort($cdiLogEntries);
+						foreach($cdiLogEntries as $entry) {
+							if($entryCount == 5) { break; }
+							$tr = new XMLElement('tr',null);
+							$tr->appendChild(new XMLElement('td',$entry . '.sql'));
+							$table->appendChild($tr);
+							$entryCount++;
+						}
+					} else {
+						$tr = new XMLElement('tr',null);
+						$tr->appendChild(new XMLElement('td','There are no entries in the CDI log'));
+						$table->appendChild($tr);
+					}
+					$entries->appendChild($table);
+				}
+				$div->appendChild($entries);
+				$group->appendChild($div);
 			} else {
-				$entries->appendChild(new XMLElement('h3','The last 5 queries logged',array('style' => 'margin-bottom: 5px;')));
-				$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
-				$cdiLogEntries = CdiLogQuery::getCdiLogFiles();
-				if(count($cdiLogEntries) > 0) {
-					rsort($cdiLogEntries);
-					foreach($cdiLogEntries as $entry) {
-						if($entryCount == 5) { break; }
-						$tr = new XMLElement('tr',null);
-						$tr->appendChild(new XMLElement('td',$entry . '.sql'));
-						$table->appendChild($tr);
-						$entryCount++;
-					}
+				$div = new XMLElement('div', NULL);
+				$div->appendChild(new XMLElement('h3','Import SQL Statements',array('style' => 'margin-bottom: 5px;')));
+				$span = new XMLElement('span',NULL,array('class' => 'frame'));
+				if(file_exists(CDIROOT . '/db_sync.sql')) {
+					$span->appendChild(new XMLElement('button','Import',array('name' => 'action[cdi_import]', 'type' => 'submit')));
 				} else {
-					$tr = new XMLElement('tr',null);
-					$tr->appendChild(new XMLElement('td','There are no entries in the CDI log'));
-					$table->appendChild($tr);
+					$context["parent"]->Page->Form->setAttribute('enctype', 'multipart/form-data');
+					$span->appendChild(new XMLElement('input',NULL,array('name' => 'cdi_import_file', 'type' => 'file')));
+					$span->appendChild(new XMLElement('button','Import',array('name' => 'action[cdi_import]', 'type' => 'submit')));
 				}
-				$entries->appendChild($table);
+				$div->appendChild($span);
+				$div->appendChild(new XMLElement('p', 'All SQL statements in the Database Synchroniser file will be execute on this Symphony instance. When all statements have been succesfully imported the file will be deleted.', array('class' => 'help')));
+				$group->appendChild($div);
 			}
-			$div->appendChild($entries);
-			$group->appendChild($div);
 			
 			// CLEAR Button
 			if($entryCount != 0) {
@@ -210,9 +252,17 @@
 		}
 
 		public function savePreferences($context){
+			// CDI Mode
+			if(isset($_POST['settings']['cdi']['cdi-mode'])){
+				Symphony::Configuration()->set('cdi-mode', $_POST['settings']['cdi']['cdi-mode'], 'cdi');
+			} else {
+				Symphony::Configuration()->set('cdi-mode', 'cdi', 'cdi');
+			}
+			
+			// Instance Mode
 			if(isset($_POST['settings']['cdi']['is-slave'])){
 				if($this->__createTable()) {
-					CdiLogQuery::cleanLogs();
+					CdiLogQuery::cleanLogs(false);
 					Symphony::Configuration()->set('is-slave', 'yes', 'cdi');
 				} else {
 					throw new DatabaseException("Could not create CDI database table");

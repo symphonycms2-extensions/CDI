@@ -7,6 +7,7 @@
 		private static $isUpdating;
 		private static $lastEntryTS;
 		private static $lastEntryOrder;
+		private static $meta_written = FALSE;
 	
 		/**
 		 * Return the current author.
@@ -61,15 +62,46 @@
 			if (!preg_match('/;$/', $query)) $query .= ";";
 	
 			// We've come far enough... let's try to save it to disk!
-			return CdiLogQuery::persistQuery($query);
+			if(Symphony::Configuration()->get('cdi-mode', 'cdi') == 'db_sync') {
+				return CdiLogQuery::persistQueryDBSync($query);
+			} else {
+				return CdiLogQuery::persistQueryCDI($query);
+			}
 		}
 	
+		private static function persistQueryDBSync($query) {
+			$line = '';
+	
+			if(self::$meta_written == FALSE) {
+	
+				$line .= "\n" . '-- ' . date('Y-m-d H:i:s', time());
+	
+				$author = Administration::instance()->Author;
+				if (isset($author)) $line .= ', ' . $author->getFullName();
+	
+				$url = Administration::instance()->getCurrentPageURL();
+				if (!is_null($url)) $line .= ', ' . $url;
+	
+				$line .= ";\n";
+	
+				self::$meta_written = TRUE;
+	
+			}
+
+			$line .= $query . "\n";
+			
+			$logfile = CDIROOT . '/db_sync.sql';
+			$handle = @fopen($logfile, 'a');
+			fwrite($handle, $line);
+			fclose($handle);			
+		}		
+		
 		/**
 		 * If it is proven to be a valid SQL Statement worthy of logging, the persistQuery() function will
 		 * write the statement to file and log it
 		 * @param string $query The SQL Statement that will be saved to file and CDI log
 		 */
-		private static function persistQuery($query) {
+		private static function persistQueryCDI($query) {
 			try {
 				$ts = time();
 		
@@ -190,11 +222,59 @@
 				//TODO: think of some smart way of dealing with errors, perhaps through the preference screen or a CDI Status content page?
 				echo "ERROR: " . $e->getMessage();
 			}
-	
-			// Enable CdiLogQuery::log() from persisting queries
+
+			// Save the last update date to configuration
+			Symphony::Configuration()->set('last-update', 'cdi', time());
+			Administration::instance()->saveConfig();
+			
+			// Re-enable CdiLogQuery::log() to persist queries
 			CdiLogQuery::$isUpdating = false;
 		}
 	
+		public static function importSyncFile() {
+			// We should not be processing any queries when the extension is disabled or when it is in 'Continuous Database Integration' mode
+			if((!class_exists('Administration'))) { //||
+			   //(Symphony::Configuration()->get('enabled', 'cdi') == 'no') ||
+			   //(Symphony::Configuration()->get('cdi-mode', 'cdi') == 'db_sync')) {
+			   	throw new Exception("You can only import the Database Synchroniser file from the Preferences page");
+			}
+			
+			// Prevent the CdiLogQuery::log() from persisting queries that are executed by CDI itself
+			CdiLogQuery::$isUpdating = true;
+
+			// Handle file upload
+			$syncFile = CDIROOT . '/db_sync.sql';
+			if(isset($_FILES['cdi_import_file'])) {
+				$syncFile = $_FILES['cdi_import_file']['tmp_name'];
+			}
+			
+			//Execute the queries from file
+			try {
+				if(file_exists($syncFile)) {
+					$contents = file_get_contents($syncFile);
+					$queries = split(';',$contents);
+					foreach($queries as $query) {
+						$query = trim($query);
+						// ommit comments and empty statements
+						if(!preg_match('/^--/i', $query) && !$query=='') {
+							Symphony::Database()->query($query);
+						}
+					}
+				}
+			} catch (Exception $e) {
+				// Re-enable CdiLogQuery::log() to persist queries
+				CdiLogQuery::$isUpdating = false;
+				throw $e;
+			}
+
+			// Save the last update date to configuration
+			Symphony::Configuration()->set('last-update', 'cdi', time());
+			Administration::instance()->saveConfig();
+			
+			// Re-enable CdiLogQuery::log() to persist queries
+			CdiLogQuery::$isUpdating = false;
+		}
+		
 		/**
 		 * Returns the SQL statements files from the Manifest folder
 		 */
@@ -203,7 +283,7 @@
 			if(file_exists(MANIFEST . '/cdi/')) {
 				if($handle = opendir(MANIFEST . '/cdi/')) {
 				    while (false !== ($file = readdir($handle))) {
-				    	if($file != '.' && $file != '..') {
+				    	if($file != '.' && $file != '..' && $file != 'db_sync.sql') {
 				    		if(strpos($file,".sql") !== false) {
 					        	$files[] = str_replace('.sql', '', $file);
 				    		}
@@ -220,7 +300,7 @@
 		 * Removes all the stored log files from disk
 		 * This function can only be called by MASTER instances
 		 */
-		public static function cleanLogs() {
+		public static function cleanLogs($completely) {
 			// We should not be removing any files from SLAVE instances
 			if((!class_exists('Administration')) || !defined('CDIROOT') ||
 			   (Symphony::Configuration()->get('enabled', 'cdi') == 'no') ||
@@ -231,7 +311,10 @@
 			if(file_exists(CDIROOT)) {
 				$files = CdiLogQuery::getCdiLogFiles();
 				foreach($files as $file) { unlink(CDIROOT . '/' . $file . '.sql'); }
-				rmdir(CDIROOT);
+				if($completely) {
+					if(file_exists(CDIROOT . '/db_sync.sql')) { unlink(CDIROOT . '/db_sync.sql'); }
+					rmdir(CDIROOT);
+				}
 			}
 		}
 	}
