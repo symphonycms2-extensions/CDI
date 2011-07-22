@@ -1,8 +1,8 @@
 # Continuous Database Integration
 
-* Version: 0.1.0
+* Version: 0.3.0
 * Author: Remie Bolte <http://github.com/remie>
-* Build Date: 2011-07-17
+* Build Date: 2011-07-22
 * Requirements: Symphony 2.2.1, requires a small modification to class.mysql.php (see below)
 
 Special thanks go out to Nick Dunn <http://github.com/nickdunn/> and Richard Warrender <http://github.com/rwarrender>. 
@@ -31,8 +31,6 @@ to create a backup of your data in production, and only run the upgrade in maint
 
 ## Roadmap
 
-* Aggregate all queries and save them to a single file (using JSON or XML serialization)
-
 * Add automatic backup of current database before executing CDI queries using https://github.com/nils-werner/dump_db
 
 * Add automatic restore of database backup upon query execution errors (including switch to maintenance mode) 
@@ -48,7 +46,11 @@ to create a backup of your data in production, and only run the upgrade in maint
 ## Version History
 
 ### 0.3.0
+
 * Support the same features as the Database Synchroniser extension: a single db_sync.sql file that logs all queries for manual propagating changes to other instances.
+
+* Aggregate all queries and save them to a single file (using JSON or XML serialization)
+  WARNING: this feature breaks backwards compatibility with version 0.2.0
 
 ### 0.2.0
 * Add rollback support in case of SQL execution errors

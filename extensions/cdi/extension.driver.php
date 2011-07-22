@@ -7,8 +7,8 @@
 		public function about() {
 			return array(
 				'name'			=> 'Continuous Database Integration',
-				'version'		=> '0.1.0',
-				'release-date'	=> '2011-07-17',
+				'version'		=> '0.3.0',
+				'release-date'	=> '2011-07-22',
 				'author'		=> array(
 					'name'			=> 'Remie Bolte, Nick Dunn, Richard Warrender',
 					'email'			=> 'r.bolte@gmail.com'
@@ -111,8 +111,11 @@
 		public function appendPreferences($context){
 			// Clean the database and log files when the cd_clear action is called
 			if(isset($_POST["action"]["cdi_clear"])) {
-				Symphony::Database()->query('DELETE FROM `tbl_cdi_log`');
 				CdiLogQuery::cleanLogs(false);
+				if((Symphony::Configuration()->get('cdi-mode', 'cdi') == 'cdi') && 
+				   (Symphony::Configuration()->get('is-slave', 'cdi') == 'yes')) {
+					Symphony::Database()->query('DELETE FROM `tbl_cdi_log`');
+				}
 			}
 			
 			// Import the db_sync.sql file when the cdi_import action is called
@@ -199,13 +202,14 @@
 				} else {
 					$entries->appendChild(new XMLElement('h3','The last 5 queries logged',array('style' => 'margin-bottom: 5px;')));
 					$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
-					$cdiLogEntries = CdiLogQuery::getCdiLogFiles();
+					$cdiLogEntries = CdiLogQuery::getCdiLogEntries();
 					if(count($cdiLogEntries) > 0) {
 						rsort($cdiLogEntries);
 						foreach($cdiLogEntries as $entry) {
 							if($entryCount == 5) { break; }
 							$tr = new XMLElement('tr',null);
-							$tr->appendChild(new XMLElement('td',$entry . '.sql'));
+							$tr->appendChild(new XMLElement('td',date('d-m-Y h:m:s', $entry[0]),array('width' => '150')));
+							$tr->appendChild(new XMLElement('td',htmlspecialchars($entry[3])));
 							$table->appendChild($tr);
 							$entryCount++;
 						}

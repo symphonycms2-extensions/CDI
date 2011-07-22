@@ -1,6 +1,8 @@
 <?php
 
-	define("CDIROOT",MANIFEST . '/cdi',false);
+	define('CDIROOT',MANIFEST . '/cdi',false);
+	define('CDI_FILE', CDIROOT . '/cdi.sql');
+	define('DB_SYNC_FILE', CDIROOT . '/db_sync.sql');
 	
 	class CdiLogQuery {
 		
@@ -90,7 +92,7 @@
 
 			$line .= $query . "\n";
 			
-			$logfile = CDIROOT . '/db_sync.sql';
+			$logfile = DB_SYNC_FILE;
 			$handle = @fopen($logfile, 'a');
 			fwrite($handle, $line);
 			fclose($handle);			
@@ -111,8 +113,14 @@
 				} else {
 					CdiLogQuery::$lastEntryOrder++;
 				}
-		
-				$hash = md5($query . $ts . CdiLogQuery::$lastEntryOrder);
+
+				// Replace the table prefix in the query
+				// This allows query execution on slave instances with different table prefix.
+				$tbl_prefix = Symphony::Configuration()->get('tbl_prefix', 'database');
+				$query = str_replace($tbl_prefix,'tbl_',$query);
+				
+				$id = $ts . '-' . CdiLogQuery::$lastEntryOrder;
+				$hash = md5($id . $query);
 				$date = date('Y-m-d H:i:s', $ts);
 				
 				try{
@@ -120,8 +128,9 @@
 					//The database table `tbl_cdi_log` is removed from the database on the MASTER instance.
 					//It is the repsonsibility of the user to ensure that they only have a single MASTER instance 
 					//and that they protect the integrity of the Symphony database
-					$logfile = MANIFEST . '/cdi/' . $ts . '-' . CdiLogQuery::$lastEntryOrder . '-' . $hash . '.sql';
-					file_put_contents($logfile,$query);
+					$entries = CdiLogQuery::getCdiLogEntries();
+					$entries[$id] = array(0 => $ts, 1 => CdiLogQuery::$lastEntryOrder, 2 => $hash, 3 => $query);
+					file_put_contents(CDI_FILE, json_encode($entries));
 					return true;
 				} catch(Exception $e) {
 					//TODO: think of some smart way of dealing with errors, perhaps through the preference screen or a CDI Status content page?
@@ -141,16 +150,19 @@
 		 * @param Integer $order The execution order of the query (in case of multiple executions with the same timestamp)
 		 */
 		private static function rollback($hash,$timestamp,$order) {
+			// do not rollback erronous changes to tbl_cdi_log
+			$tbl_prefix = Symphony::Configuration()->get('tbl_prefix', 'database');
+			if (preg_match("/{$tbl_prefix}cdi_log/i", $query)) return true;
+			
 			try {
 				if(Symphony::Configuration()->get('is-slave', 'cdi') == 'yes') {
 					// On the SLAVE instance we need to remove the execution log entry from the database
 					Symphony::Database()->query("DELETE FROM `tbl_cdi_log` WHERE `query_hash` LIKE '" . $hash . "'");
 				} else if(Symphony::Configuration()->get('is-slave', 'cdi') == 'no') {
 					// On the MASTER instance we need to remove the persisted SQL Statement from disk (if it exists)
-					$logfile = MANIFEST . '/cdi/' . $ts . '-' . CdiLogQuery::$lastEntryOrder . '-' . $hash . '.sql';
-					if(file_exists($logfile)) {
-						unlink($logfile);
-					}
+					$entries = CdiLogQuery::getCdiLogEntries();
+					unset($entries[$hash]);
+					file_put_contents(CDI_FILE, json_encode($entries));
 				} else {
 					throw new Exception("Invalid value for the CDI is-slave configuration option, 'yes' or 'no' expected.");
 				}
@@ -185,14 +197,19 @@
 				$skipped = 0;
 				$executed = 0;
 	
-				$files = CdiLogQuery::getCdiLogFiles();
-				foreach($files as $file) {
-					$parts = split('-',$file);
-					$ts = $parts[0];
-					$order = $parts[1];
-					$hash = $parts[2];
+				$entries = CdiLogQuery::getCdiLogEntries();
+				foreach($entries as $entry) {
+					$ts = $entry[0];
+					$order = $entry[1];
+					$hash = $entry[2];
+					$query = $entry[3];
 					$date = date('Y-m-d H:i:s', $ts);
 	
+					// Replace the table prefix in the query
+					// Rename the generic table prefix to the prefix used by this instance
+					$tbl_prefix = Symphony::Configuration()->get('tbl_prefix', 'database');
+					$query = str_replace('tbl_', $tbl_prefix, $query);
+					
 					try {
 						// Look for available CDI log entries based on the provided MD5 hash
 						$cdiLogEntry = Symphony::Database()->fetchRow(0,"SELECT * FROM tbl_cdi_log WHERE `query_hash` LIKE '" . $hash . "'");
@@ -200,9 +217,8 @@
 						if(empty($cdiLogEntry)) {
 							// The query has not been found in the log, thus it has not been executed
 							// So let's execute the query and add it to the log!
-							$query = file_get_contents(MANIFEST . '/cdi/' . $file . '.sql');
 							Symphony::Database()->query("INSERT INTO `tbl_cdi_log` (`query_hash`,`author`,`url`,`date`,`order`)
-														 VALUES ('" . $parts[2] . "','" . CdiLogQuery::getAuthor() . "','" . CdiLogQuery::getURL() . "','" . $date . "'," . $order . ")");
+														 VALUES ('" . $hash . "','" . CdiLogQuery::getAuthor() . "','" . CdiLogQuery::getURL() . "','" . $date . "'," . $order . ")");
 							Symphony::Database()->query($query);
 							$executed++;
 						} else {
@@ -214,6 +230,7 @@
 						//Due to the error we need to perform a rollback to allow this query to be executed at a later stage.
 						CdiLogQuery::rollback($hash,$ts,$order);
 						echo "ERROR: " . $e->getMessage() , ". Rollback has been executed.";
+						die();
 					}
 				}
 				
@@ -243,7 +260,7 @@
 			CdiLogQuery::$isUpdating = true;
 
 			// Handle file upload
-			$syncFile = CDIROOT . '/db_sync.sql';
+			$syncFile = DB_SYNC_FILE;
 			if(isset($_FILES['cdi_import_file'])) {
 				$syncFile = $_FILES['cdi_import_file']['tmp_name'];
 			}
@@ -278,22 +295,14 @@
 		/**
 		 * Returns the SQL statements files from the Manifest folder
 		 */
-		public static function getCdiLogFiles() {
-			$files = array();
-			if(file_exists(MANIFEST . '/cdi/')) {
-				if($handle = opendir(MANIFEST . '/cdi/')) {
-				    while (false !== ($file = readdir($handle))) {
-				    	if($file != '.' && $file != '..' && $file != 'db_sync.sql') {
-				    		if(strpos($file,".sql") !== false) {
-					        	$files[] = str_replace('.sql', '', $file);
-				    		}
-				    	}
-				    }
-				    closedir($handle);
-				}
-				sort($files);
+		public static function getCdiLogEntries() {
+			$entries = array();
+			if(file_exists(CDI_FILE)) {
+				$contents = file_get_contents(CDI_FILE);
+				$entries = json_decode($contents, true);
+				sort($entries);
 			}
-			return $files;
+			return $entries;
 		}
 		
 		/**
@@ -309,10 +318,9 @@
 			}
 	
 			if(file_exists(CDIROOT)) {
-				$files = CdiLogQuery::getCdiLogFiles();
-				foreach($files as $file) { unlink(CDIROOT . '/' . $file . '.sql'); }
+				if(file_exists(CDI_FILE)) { unlink(CDI_FILE); }
 				if($completely) {
-					if(file_exists(CDIROOT . '/db_sync.sql')) { unlink(CDIROOT . '/db_sync.sql'); }
+					if(file_exists(DB_SYNC_FILE)) { unlink(DB_SYNC_FILE); }
 					rmdir(CDIROOT);
 				}
 			}
