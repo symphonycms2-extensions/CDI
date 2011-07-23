@@ -31,10 +31,6 @@ to create a backup of your data in production, and only run the upgrade in maint
 
 ## Roadmap
 
-* Add automatic backup of current database before executing CDI queries using https://github.com/nils-werner/dump_db
-
-* Add automatic restore of database backup upon query execution errors (including switch to maintenance mode) 
-
 * Add support for DATA changes from the backend
 
 * Implement a rolling file appending strategy to prevent the aggregated SQL files from becoming to large
@@ -45,8 +41,16 @@ to create a backup of your data in production, and only run the upgrade in maint
 
 ## Version History
 
-### 0.3.0
+### 0.4.0
+* Added automatic backup of current database before executing CDI queries using https://github.com/nils-werner/dump_db
 
+* Added automatic restore of database backup upon query execution errors (including switch to maintenance mode) 
+
+* Added support for manual backup & restore of current database using https://github.com/nils-werner/dump_db
+
+* UI tweaks and Ajaxification of the preferences implementation
+
+### 0.3.0
 * Support the same features as the Database Synchroniser extension: a single db_sync.sql file that logs all queries for manual propagating changes to other instances.
 
 * Aggregate all queries and save them to a single file (using JSON or XML serialization)
