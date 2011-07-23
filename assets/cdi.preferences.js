@@ -6,17 +6,6 @@ jQuery(document).ready(function () {
 		jQuery(this).closest('div').nextAll().empty();
 		jQuery('.cdiModeRestart').removeAttr('style');
 		jQuery(this).unbind(event);
-		
-		
-		/*
-		each(function(index,oElm) {
-			if(jQuery(oElm).hasClass(sValue)) {
-				jQuery(this).css('display','');
-			} else {
-				jQuery(this).css('display','none');
-			}
-		});
-		*/
 	});
 	
 	jQuery('.instance-mode').click(function(event) {
@@ -45,27 +34,31 @@ jQuery(document).ready(function () {
 		});
 	});
 
-	jQuery('input[class*="_action"]').click(function() {
+	jQuery('input[class*="_action"]').click(function(event) {
 		var sAction = this.name;
-		var sData = this.name + '=true&ref=' + this.getAttribute('ref');
-		jQuery.post(Symphony.WEBSITE + '/symphony/extension/cdi/save/',sData, function(data) {
-			if(data.status == 'success') {
-				switch(sAction) {
-					case 'action[cdi_clear]':
-						var oTable = jQuery('.cdiLastQueries > table');
-						var oEmptyTableCell = jQuery('.cdiLastQueries .cdiNoLastQueriesCell');
-						oEmptyTableCell.removeAttr('style');
-						
-						oTable.empty();
-						oTable.append(oEmptyTableCell);
-						break;
-						
-					case 'action[cdi_export]':
-						var oResult = jQuery('<div />').html(data.result).text();
-						oResult = jQuery('.cdiRestore').replaceWith(oResult);
-						break;
+		if(sAction == 'action[cdi_import]') { 
+			this.form.submit(); 
+		} else {
+			var sData = this.name + '=true&ref=' + this.getAttribute('ref');
+			jQuery.post(Symphony.WEBSITE + '/symphony/extension/cdi/save/',sData, function(data) {
+				if(data.status == 'success') {
+					switch(sAction) {
+						case 'action[cdi_clear]':
+							var oTable = jQuery('.cdiLastQueries > table');
+							var oEmptyTableCell = jQuery('.cdiLastQueries .cdiNoLastQueriesCell');
+							oEmptyTableCell.removeAttr('style');
+							
+							oTable.empty();
+							oTable.append(oEmptyTableCell);
+							break;
+							
+						case 'action[cdi_export]':
+							var oResult = jQuery('<div />').html(data.result).text();
+							oResult = jQuery('.cdiRestore').replaceWith(oResult);
+							break;
+					}
 				}
-			}
-		});
+			});
+		}
 	});
 });
