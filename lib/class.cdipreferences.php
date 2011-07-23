@@ -337,14 +337,12 @@
 		public static function appendDBSyncImport() {
 			$div = new XMLElement('div', NULL);
 			$div->appendChild(new XMLElement('h3','Import SQL Statements',array('style' => 'margin-bottom: 5px;')));
-			$span = new XMLElement('span',NULL,array('class' => 'frame'));
-			if(file_exists(CDIROOT . '/db_sync.sql')) {
-				$span->appendChild(new XMLElement('input',null,array('value' => 'Import', 'name' => 'action[cdi_upload_and_import]', 'type' => 'submit')));
-			} else {
+			if(!file_exists(CDIROOT . '/db_sync.sql')) {
 				Administration::instance()->Page->Form->setAttribute('enctype', 'multipart/form-data');
+				$span = new XMLElement('span',NULL,array('class' => 'frame'));
 				$span->appendChild(new XMLElement('input',NULL,array('name' => 'cdi_import_file', 'type' => 'file')));
+				$div->appendChild($span);
 			}
-			$div->appendChild($span);
 			
 			$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
 			$button->appendChild(new XMLElement('input',null,array('value' => 'Import', 'name' => 'action[cdi_import]', 'type' => 'button', 'class' => 'cdi_import_action')));
