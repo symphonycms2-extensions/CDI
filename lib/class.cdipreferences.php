@@ -16,14 +16,15 @@
 			$div = new XMLElement('div', NULL);
 			$div->appendChild(new XMLElement('h3','Continuous Integration Mode',array('style' => 'margin-bottom: 5px;')));
 			$options = array();
-			$options[] = array('cdi', ($cdiMode == 'cdi'), 'Continuous Database Integration');
-			$options[] = array('db_sync', ($cdiMode == 'db_sync'), 'Database Synchroniser');
+			$options[] = array('cdi', (CdiUtil::isCdiMaster() || CdiUtil::isCdiSlave()), 'Continuous Database Integration');
+			$options[] = array('db_sync', (CdiUtil::isCdiDBSync()), 'Database Synchroniser');
 			$div->appendChild(Widget::Select('settings[cdi][cdi-mode]', $options, array('class' => 'cdi-mode', 'style' => 'width: 250px;margin-bottom: 12px;')));
 			if(CdiUtil::isCdiMaster() || CdiUtil::isCdiSlave()) {
 				$div->appendChild(new XMLElement('p', 'Each individual query is stored to disk in order of execution and can be automatically executed on a slave instance. The CDI extension will register which queries have been executed to prevent duplicate execution.', array('class' => 'help', 'style' => 'margin-bottom: 10px;')));
 			} else if(CdiUtil::isCdiDBSync()) {
 				$div->appendChild(new XMLElement('p', 'All queries are stored to disk in a single file. The generated SQL file needs to be manually executed on each slave instance and flushed after upgrading to prevent duplicate execution.', array('class' => 'help', 'style' => 'margin-bottom: 10px;')));
 			}
+			$div->appendChild(new XMLElement('p', 'You need to save your changes before you can configure this mode, or reload the page to cancel. <br />Be advised: changing CDI mode will reset any mode specific configuration settings.', array('class' => 'cdiModeRestart', 'style' => 'display:none;')));
 			return $div;
 		}
 
@@ -100,9 +101,12 @@
 		public static function save() {
 			// CDI & Instance Mode
 			if(isset($_POST['settings']['cdi']['cdi-mode'])){
-				switch(isset($_POST['settings']['cdi']['cdi-mode'])) {
+				switch($_POST['settings']['cdi']['cdi-mode']) {
 					case "cdi":
-
+						//TODO: when switching between CDI modes, if you go from DBSync to CDI
+						//it will default to CdiMaster because the 'is-slave' variable is not set
+						//this is an unwanted side-effect of this generic implementation because the default should be CdiSlave.
+						
 						// Instance Mode
 						if(isset($_POST['settings']['cdi']['is-slave'])){
 							Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
@@ -159,7 +163,7 @@
 			Private static static functions
 		-------------------------------------------------------------------------*/	
 				
-		private static function appendInstanceMode() {
+		public static function appendInstanceMode() {
 			$div = new XMLElement('div', NULL);
 			$div->appendChild(new XMLElement('h3','Instance Mode',array('style' => 'margin: 5px 0;')));
 			$label = Widget::Label();
@@ -179,12 +183,11 @@
 			$div->appendChild(new XMLElement('p', 'The extension is designed to allow automatic propagation of structural changes between environments in a DTAP setup.
 												   It is imperitive that you have a single "Master" instance (usually your development environment). This is important because the auto-increment values need to be exactly the same on each database table in every environment. 
 												   Switching between modes is therefore not recommended. If needed, make sure you only switch instance mode after you have ensured that you have restored all databases from the same source and cleared the CDI logs on all instances.', array('class' => 'help')));
-			$div->appendChild(new XMLElement('p', 'You need to save your changes before you can configure this instance, or reload the page to cancel.', array('class' => 'restart', 'style' => 'display:none;')));
-			
+			$div->appendChild(new XMLElement('p', 'You need to save your changes before you can configure this instance, or reload the page to cancel.<br />Be advised: changing instances mode will reset any instance specific configuration settings', array('class' => 'cdiInstanceRestart', 'style' => 'display:none;')));
 			return $div;
 		}
 		
-		private static function appendDumpDB() {
+		public static function appendDumpDB() {
 			$div = new XMLElement('div', NULL);
 			$div->appendChild(new XMLElement('h3','Backup &amp; Restore',array('style' => 'margin: 5px 0;')));
 
@@ -250,8 +253,8 @@
 			return $div;
 		}
 		
-		private static function appendRestore() {
-			$div = new XMLElement('div', NULL,array('style'=>'margin-bottom: 1.5em;'));
+		public static function appendRestore() {
+			$div = new XMLElement('div', NULL,array('style'=>'margin-bottom: 1.5em;','class' => 'cdiRestore'));
 			if(CdiUtil::hasRequiredDumpDBVersion()) {
 				$div->appendChild(new XMLElement('h3','Restore Symphony Database',array('style' => 'margin: 5px 0;')));
 				$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
@@ -280,8 +283,8 @@
 			return $div;
 		}
 		
-		private static function appendCdiMasterQueries() {
-			$div = new XMLElement('div', NULL,array('style'=>'margin-bottom: 1.5em;', 'class' => 'lastQueries'));
+		public static function appendCdiMasterQueries() {
+			$div = new XMLElement('div', NULL,array('style'=>'margin-bottom: 1.5em;', 'class' => 'cdiLastQueries'));
 			$div->appendChild(new XMLElement('h3','The last 5 queries logged',array('style' => 'margin-bottom: 5px;')));
 			$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
 			$cdiLogEntries = CdiLogQuery::getCdiLogEntries();
@@ -296,7 +299,7 @@
 					$entryCount++;
 				}
 			}
-			$tr = new XMLElement('tr',null,array('class' => 'noLastQueriesCell'));
+			$tr = new XMLElement('tr',null,array('class' => 'cdiNoLastQueriesCell'));
 			if($entryCount != 0) { $tr->setAttribute('style','display:none;'); }
 			$tr->appendChild(new XMLElement('td','There are no entries in the CDI log'));
 			$table->appendChild($tr);
@@ -305,8 +308,8 @@
 			return $div;
 		}
 		
-		private static function appendCdiSlaveQueries() {
-			$div = new XMLElement('div', NULL,array('style'=>'margin-bottom: 1.5em;','class' => 'lastQueries'));
+		public static function appendCdiSlaveQueries() {
+			$div = new XMLElement('div', NULL,array('style'=>'margin-bottom: 1.5em;','class' => 'cdiLastQueries'));
 			$div->appendChild(new XMLElement('h3','The last 5 queries executed',array('style' => 'margin-bottom: 5px;')));
 			$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
 			$cdiLogEntries = Symphony::Database()->fetch("SELECT * FROM tbl_cdi_log ORDER BY `date` DESC LIMIT 0,5");
@@ -321,7 +324,7 @@
 				}
 			}
 
-			$tr = new XMLElement('tr',null,array('class' => 'noLastQueriesCell'));
+			$tr = new XMLElement('tr',null,array('class' => 'cdiNoLastQueriesCell'));
 			if($entryCount != 0) { $tr->setAttribute('style','display:none;'); }
 			$tr->appendChild(new XMLElement('td','No CDI queries have been executed on this instance'));
 			$table->appendChild($tr);
@@ -330,7 +333,7 @@
 			return $div;
 		}
 		
-		private static function appendDBSyncImport() {
+		public static function appendDBSyncImport() {
 			$div = new XMLElement('div', NULL);
 			$div->appendChild(new XMLElement('h3','Import SQL Statements',array('style' => 'margin-bottom: 5px;')));
 			$span = new XMLElement('span',NULL,array('class' => 'frame'));
@@ -350,7 +353,7 @@
 			return $div;
 		}
 		
-		private static function appendDBExport() {
+		public static function appendDBExport() {
 			$div = new XMLElement('div', NULL);
 			$div->appendChild(new XMLElement('h3','Export current Symphony database',array('style' => 'margin-bottom: 5px;')));
 			$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
@@ -361,7 +364,7 @@
 			return $div;
 		}
 
-		private static function appendClearLog() {
+		public static function appendClearLog() {
 			$div = new XMLElement('div',NULL);
 			$div->appendChild(new XMLElement('h3','Clear Log Entries',array('style' => 'margin-bottom: 5px;')));
 			$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));

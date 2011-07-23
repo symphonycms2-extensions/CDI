@@ -5,7 +5,9 @@
 	require_once(EXTENSIONS . '/cdi/lib/class.cdimaster.php');
 	require_once(EXTENSIONS . '/cdi/lib/class.cdislave.php');
 	require_once(EXTENSIONS . '/cdi/lib/class.cdidbsync.php');
+	require_once(EXTENSIONS . '/cdi/lib/class.cdidumpdb.php');
 	require_once(EXTENSIONS . '/cdi/lib/class.cdilogquery.php');
+	require_once(EXTENSIONS . '/cdi/lib/class.cdipreferences.php');
 	
 	// We should not be processing any queries when the extension is disabled or when we are the Master instance
 	if((!class_exists('Administration')) || !CdiUtil::isEnabled()) {
@@ -35,7 +37,13 @@
 		
 	// CDI Export
 	else if(isset($_POST["action"]["cdi_export"])) {
-		CdiLogQuery::backupDatabase();
+		try {
+			CdiDumpDB::backup();
+			$result["result"] = htmlspecialchars(CdiPreferences::appendRestore()->generate());
+		} catch(Exception $e) {
+			$result["status"] = "error";
+			$result["message"] = $e->getMessage();
+		}
 		$result["status"] = 'success';
 	} 
 	

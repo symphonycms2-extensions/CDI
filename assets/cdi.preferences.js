@@ -1,15 +1,22 @@
 
 jQuery(document).ready(function () {
 	
-	jQuery('.cdi-mode').bind('change keyup keydown', function() {
+	jQuery('.cdi-mode').bind('change keyup keydown', function(event) {
 		var sValue = this.value;
-		jQuery(this).closest('div').nextAll().each(function(index,oElm) {
+		jQuery(this).closest('div').nextAll().empty();
+		jQuery('.cdiModeRestart').removeAttr('style');
+		jQuery(this).unbind(event);
+		
+		
+		/*
+		each(function(index,oElm) {
 			if(jQuery(oElm).hasClass(sValue)) {
 				jQuery(this).css('display','');
 			} else {
 				jQuery(this).css('display','none');
 			}
 		});
+		*/
 	});
 	
 	jQuery('.instance-mode').click(function(event) {
@@ -19,7 +26,7 @@ jQuery(document).ready(function () {
 		oParent.detach();
 
 		oElm.addClass('cdi');
-		jQuery('.restart').removeAttr('style');
+		jQuery('.cdiInstanceRestart').removeAttr('style');
 		jQuery(this).unbind(event);
 	});
 	
@@ -45,12 +52,17 @@ jQuery(document).ready(function () {
 			if(data.status == 'success') {
 				switch(sAction) {
 					case 'action[cdi_clear]':
-						var oTable = jQuery('.lastQueries > table');
-						var oEmptyTableCell = jQuery('.lastQueries .noLastQueriesCell');
+						var oTable = jQuery('.cdiLastQueries > table');
+						var oEmptyTableCell = jQuery('.cdiLastQueries .cdiNoLastQueriesCell');
 						oEmptyTableCell.removeAttr('style');
 						
 						oTable.empty();
 						oTable.append(oEmptyTableCell);
+						break;
+						
+					case 'action[cdi_export]':
+						var oResult = jQuery('<div />').html(data.result).text();
+						oResult = jQuery('.cdiRestore').replaceWith(oResult);
 						break;
 				}
 			}

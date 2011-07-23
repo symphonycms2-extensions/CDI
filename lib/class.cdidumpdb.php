@@ -19,24 +19,22 @@
 		 */
 		public static function backup() {
 			// We should only backup the database when the extension is enabled and version 1.08 of the Dump_DB extension is installed.
-			if((!class_exists('Administration'))  ||
-			   (Symphony::Configuration()->get('enabled', 'cdi') == 'no')) {
+			if((!class_exists('Administration'))  || !CdiUtil::isEnabled()) {
 			   	throw new Exception("You can only import the Database Synchroniser file from the Preferences page");
 			}
-			
-			require_once(EXTENSIONS . '/dump_db/extension.driver.php');
-			require_once(EXTENSIONS . '/dump_db/lib/class.mysqldump.php');
-			$about = extension_dump_db::about();
-			$version = $about["version"];
-			if($version != "1.08") {
+
+			if(!CdiUtil::hasRequiredDumpDBVersion()) {
 				throw new Exception('Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> (' . $version . ') is not supported. Please switch to version 1.08.');
 			} else {
+				require_once(EXTENSIONS . '/dump_db/extension.driver.php');
+				require_once(EXTENSIONS . '/dump_db/lib/class.mysqldump.php');
+				
 				// Prevent the CdiLogQuery::log() from persisting queries that are executed by CDI itself
-				CdiLogQuery::$isUpdating = true;
+				CdiLogQuery::isUpdating(true);
 				
 				// COPIED FROM Dump_DB version 1.08
 				// Adjust to only support FULL database dump
-				$sql = CdiLogQuery::getMetaData();
+				$sql = CdiUtil::getMetaData();
 				
 				$dump = new MySQLDump(Symphony::Database());
 				$rows = Symphony::Database()->fetch("SHOW TABLES LIKE 'tbl_%';");
@@ -59,7 +57,7 @@
 				}
 				
 				// Re-enable CdiLogQuery::log() to persist queries
-				CdiLogQuery::$isUpdating = false;
+				CdiLogQuery::isUpdating(false);
 			}
 		}
 		

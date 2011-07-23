@@ -71,8 +71,8 @@
 		 */
 		public static function getMetaData() {
 			$meta = '-- ' . date('Y-m-d H:i:s', time());
-			$meta .= ', ' . CdiLogQuery::getAuthor();
-			$meta .= ', ' . CdiLogQuery::getURL();
+			$meta .= ', ' . self::getAuthor();
+			$meta .= ', ' . self::getURL();
 			$meta .= ";\n";
 			return $meta;
 		}
