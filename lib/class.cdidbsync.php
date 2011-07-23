@@ -1,6 +1,9 @@
 <?php
 
+	require_once(EXTENSIONS . '/cdi/lib/class.cdiutil.php');
+
 	class CdiDBSync {
+		private static $meta_written;
 		
 		public static function install() {
 			self::uninstall();
@@ -15,7 +18,7 @@
 			$line = '';
 	
 			if(self::$meta_written == FALSE) {
-				$line .= "\n" . CdiLogQuery::getMetaData();			
+				$line .= "\n" . CdiUtil::getMetaData();			
 				self::$meta_written = TRUE;
 			}
 

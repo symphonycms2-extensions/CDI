@@ -1,14 +1,11 @@
 <?php
-
 	
 	class CdiLogQuery {
-		
 		private static $isUpdating;
 	
 		public static function isUpdating($status) {
 			self::$isUpdating = $status;
 		}
-		
 		
 		/**
 		 * The CdiQueryLog::log() function is called from the Database implementation responsible for executing Symphony SQL queries
@@ -78,10 +75,6 @@
 				throw $e;
 			}
 		}
-		
-
-	
-
 		
 		/**
 		 * Returns the SQL statements files from the Manifest folder

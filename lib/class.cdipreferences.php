@@ -1,5 +1,6 @@
 <?php 
 
+	require_once(EXTENSIONS . '/cdi/lib/class.cdiutil.php');
 	require_once(EXTENSIONS . '/cdi/lib/class.cdidbsync.php');
 	require_once(EXTENSIONS . '/cdi/lib/class.cdidumpdb.php');
 	require_once(EXTENSIONS . '/cdi/lib/class.cdilogquery.php');
