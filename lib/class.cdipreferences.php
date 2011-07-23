@@ -41,13 +41,18 @@
 			} else {
 				$leftColumn->appendChild(self::appendInstanceMode());
 				$rightColumn->appendChild(self::appendDumpDB());
-				$rightColumn->appendChild(self::appendBackupFileList());
+				$rightColumn->appendChild(self::appendRestore());
 			}
 			
 			// CDI logs
 			if(CdiUtil::isCdiSlave()) {
-				$leftColumn->appendChild(self::appendCdiSlaveQueries());
-				$leftColumn->appendChild(self::appendClearLog());
+				if(CdiUtil::hasRequiredDumpDBVersion()) {
+					$leftColumn->appendChild(self::appendCdiSlaveQueries());
+					$leftColumn->appendChild(self::appendClearLog());
+				} else {
+					$footer->appendChild(self::appendCdiSlaveQueries());
+					$footer->appendChild(self::appendClearLog());
+				}
 			} else {
 				$footer->appendChild(self::appendCdiMasterQueries());
 				$footer->appendChild(self::appendClearLog());
@@ -78,7 +83,7 @@
 				$leftColumn->appendChild(self::appendClearLog());
 				
 				$rightColumn->appendChild(self::appendDumpDB());
-				$rightColumn->appendChild(self::appendBackupFileList());
+				$rightColumn->appendChild(self::appendRestore());
 
 			// Add sections to preference group
 			$section = new XMLElement('div',null,array('class' => 'db_sync'));
@@ -183,98 +188,95 @@
 			$div = new XMLElement('div', NULL);
 			$div->appendChild(new XMLElement('h3','Backup &amp; Restore',array('style' => 'margin: 5px 0;')));
 
-			if(!file_exists(EXTENSIONS . '/dump_db/extension.driver.php')) {
+			if(!CdiUtil::hasDumpDBInstalled()) {
 				$div->appendChild(new XMLElement('p', 'To enable backup and restore you need to install the <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> extension (version 1.08)'));
+			} else if(!CdiUtil::hasRequiredDumpDBVersion()) {
+				$div->appendChild(new XMLElement('p', 'Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> (' . $version . ') is not supported. Please switch to version 1.08.'));
 			} else {
-				require_once(EXTENSIONS . '/dump_db/extension.driver.php');
-				$about = extension_dump_db::about();
-				$version = $about["version"];
-				if($version != "1.08") {
-					$div->appendChild(new XMLElement('p', 'Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> (' . $version . ') is not supported. Please switch to version 1.08.'));
-				} else {
-					// Enable automatic backups
-					$label = Widget::Label();
-					$label->setAttribute('style','margin-bottom: 4px;position:relative;padding-left:18px;');
-					$input = Widget::Input('settings[cdi][backup-enabled]', 'yes', 'checkbox');
-					$input->setAttribute('style','position:absolute;left:0px;');
-					$input->setAttribute('class','backup-enabled');
-					if(Symphony::Configuration()->get('backup-enabled', 'cdi') == 'yes') { $input->setAttribute('checked', 'checked'); }
-					$label->setValue($input->generate() . ' Create an automatic backup prior to executing structural updates');
-					$div->appendChild($label);
+				// Enable automatic backups
+				$label = Widget::Label();
+				$label->setAttribute('style','margin-bottom: 4px;position:relative;padding-left:18px;');
+				$input = Widget::Input('settings[cdi][backup-enabled]', 'yes', 'checkbox');
+				$input->setAttribute('style','position:absolute;left:0px;');
+				$input->setAttribute('class','backup-enabled');
+				if(Symphony::Configuration()->get('backup-enabled', 'cdi') == 'yes') { $input->setAttribute('checked', 'checked'); }
+				$label->setValue($input->generate() . ' Create an automatic backup prior to executing structural updates');
+				$div->appendChild($label);
 
-					// Overwrite existing backup
-					$label = Widget::Label();
-					$label->setAttribute('style','margin-bottom: 4px;position:relative;padding-left:18px;');
-					$input = Widget::Input('settings[cdi][backup-overwrite]', 'yes', 'checkbox');
-					$input->setAttribute('style','position:absolute;left:0px;');
-					$input->setAttribute('class','backup-overwrite');
-					if(Symphony::Configuration()->get('backup-enabled', 'cdi') != 'yes') { 
-						$input->setAttribute('disabled', 'disabled'); 
-					} else if(Symphony::Configuration()->get('backup-overwrite', 'cdi') == 'yes') { 
-						$input->setAttribute('checked', 'checked'); 
-					}
-					$label->setValue($input->generate() . ' Overwrite any existing backup file (if unchecked a new backup file is created on each update)');
-					$div->appendChild($label);
-					
-					// Restore backup on failure
-					$label = Widget::Label();
-					$label->setAttribute('style','margin-bottom: 4px;position:relative;padding-left:18px;');
-					$input = Widget::Input('settings[cdi][restore-enabled]', 'yes', 'checkbox');
-					$input->setAttribute('style','position:absolute;left:0px;');
-					$input->setAttribute('class','restore-enabled');
-					if(Symphony::Configuration()->get('backup-enabled', 'cdi') != 'yes') { 
-						$input->setAttribute('disabled', 'disabled'); 
-					} else if(Symphony::Configuration()->get('restore-enabled', 'cdi') == 'yes') { 
-						$input->setAttribute('checked', 'checked'); 
-					}
-					$label->setValue($input->generate() . ' Automatically restore the created backup when experiencing failures during update');
-					$div->appendChild($label);
-
-					// Backup & Restore in maintenance mode
-					$label = Widget::Label();
-					$label->setAttribute('style','position:relative;padding-left:18px;');
-					$input = Widget::Input('settings[cdi][maintenance-enabled]', 'yes', 'checkbox');
-					$input->setAttribute('style','position:absolute;left:0px;');
-					$input->setAttribute('class','maintenance-enabled');
-					if(Symphony::Configuration()->get('backup-enabled', 'cdi') != 'yes') { 
-						$input->setAttribute('disabled', 'disabled'); 
-					} else if(Symphony::Configuration()->get('maintenance-enabled', 'cdi') == 'yes') { 
-						$input->setAttribute('checked', 'checked'); 
-					}
-					$label->setValue($input->generate() . ' Switch to "Maintenance" mode when performing database updates');
-					$div->appendChild($label);
+				// Overwrite existing backup
+				$label = Widget::Label();
+				$label->setAttribute('style','margin-bottom: 4px;position:relative;padding-left:18px;');
+				$input = Widget::Input('settings[cdi][backup-overwrite]', 'yes', 'checkbox');
+				$input->setAttribute('style','position:absolute;left:0px;');
+				$input->setAttribute('class','backup-overwrite');
+				if(Symphony::Configuration()->get('backup-enabled', 'cdi') != 'yes') { 
+					$input->setAttribute('disabled', 'disabled'); 
+				} else if(Symphony::Configuration()->get('backup-overwrite', 'cdi') == 'yes') { 
+					$input->setAttribute('checked', 'checked'); 
 				}
+				$label->setValue($input->generate() . ' Overwrite any existing backup file (if unchecked a new backup file is created on each update)');
+				$div->appendChild($label);
+				
+				// Restore backup on failure
+				$label = Widget::Label();
+				$label->setAttribute('style','margin-bottom: 4px;position:relative;padding-left:18px;');
+				$input = Widget::Input('settings[cdi][restore-enabled]', 'yes', 'checkbox');
+				$input->setAttribute('style','position:absolute;left:0px;');
+				$input->setAttribute('class','restore-enabled');
+				if(Symphony::Configuration()->get('backup-enabled', 'cdi') != 'yes') { 
+					$input->setAttribute('disabled', 'disabled'); 
+				} else if(Symphony::Configuration()->get('restore-enabled', 'cdi') == 'yes') { 
+					$input->setAttribute('checked', 'checked'); 
+				}
+				$label->setValue($input->generate() . ' Automatically restore the created backup when experiencing failures during update');
+				$div->appendChild($label);
+
+				// Backup & Restore in maintenance mode
+				$label = Widget::Label();
+				$label->setAttribute('style','position:relative;padding-left:18px;');
+				$input = Widget::Input('settings[cdi][maintenance-enabled]', 'yes', 'checkbox');
+				$input->setAttribute('style','position:absolute;left:0px;');
+				$input->setAttribute('class','maintenance-enabled');
+				if(Symphony::Configuration()->get('backup-enabled', 'cdi') != 'yes') { 
+					$input->setAttribute('disabled', 'disabled'); 
+				} else if(Symphony::Configuration()->get('maintenance-enabled', 'cdi') == 'yes') { 
+					$input->setAttribute('checked', 'checked'); 
+				}
+				$label->setValue($input->generate() . ' Switch to "Maintenance" mode when performing database updates');
+				$div->appendChild($label);
 			}
 			$div->appendChild(new XMLElement('p', 'It is recommended to enable automatic backup of your Symphony database prior to updating it. 
 												   In case of execution errors or data corruption this allows you to quickly revert to a working configuration.', array('class' => 'help')));
 			return $div;
 		}
 		
-		private static function appendBackupFileList() {
+		private static function appendRestore() {
 			$div = new XMLElement('div', NULL,array('style'=>'margin-bottom: 1.5em;'));
-			$div->appendChild(new XMLElement('h3','Restore Symphony Database',array('style' => 'margin: 5px 0;')));
-			$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
-			$files = CdiDumpDB::getBackupFiles();
-			if(count($files) > 0) {
-				rsort($files);
-				foreach($files as $file) {
-					$filename = split('-',$file);
-					if($entryCount == 5) { break; }
+			if(CdiUtil::hasRequiredDumpDBVersion()) {
+				$div->appendChild(new XMLElement('h3','Restore Symphony Database',array('style' => 'margin: 5px 0;')));
+				$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
+				$files = CdiDumpDB::getBackupFiles();
+				if(count($files) > 0) {
+					rsort($files);
+					foreach($files as $file) {
+						$filename = split('-',$file);
+						if($entryCount == 5) { break; }
+						$tr = new XMLElement('tr',null);
+						$tr->appendChild(new XMLElement('td',date('d-m-Y h:m:s', (int)$filename[0]),array('style' => 'vertical-align:middle;')));
+						$td = new XMLElement('td',null,array('width' => '75'));
+						$button = new XMLElement('input',null, array('value' => 'Restore', 'name' => 'action[cdi_restore]', 'type' => 'button', 'class' => 'restore_action', 'ref' => $file));
+						$td->appendChild($button);
+						$tr->appendChild($td);
+						$table->appendChild($tr);
+						$entryCount++;
+					}
+				} else {
 					$tr = new XMLElement('tr',null);
-					$tr->appendChild(new XMLElement('td',date('d-m-Y h:m:s', (int)$filename[0]),array('style' => 'vertical-align:middle;')));
-					$td = new XMLElement('td',null,array('width' => '75'));
-					$button = new XMLElement('input',null, array('value' => 'Restore', 'name' => 'action[cdi_restore]', 'type' => 'button', 'class' => 'restore_action', 'ref' => $file));
-					$td->appendChild($button);
-					$tr->appendChild($td);
+					$tr->appendChild(new XMLElement('td','There are no entries in the CDI log'));
 					$table->appendChild($tr);
-					$entryCount++;
 				}
-			} else {
-				$tr = new XMLElement('tr',null);
-				$tr->appendChild(new XMLElement('td','There are no entries in the CDI log'));
-				$table->appendChild($tr);
+				$div->appendChild($table);
 			}
-			$div->appendChild($table);
 			return $div;
 		}
 		
@@ -304,7 +306,7 @@
 		}
 		
 		private static function appendCdiSlaveQueries() {
-			$div = new XMLElement('div', NULL,array('style'=>'margin-bottom: 1.5em;'));
+			$div = new XMLElement('div', NULL,array('style'=>'margin-bottom: 1.5em;','class' => 'lastQueries'));
 			$div->appendChild(new XMLElement('h3','The last 5 queries executed',array('style' => 'margin-bottom: 5px;')));
 			$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
 			$cdiLogEntries = Symphony::Database()->fetch("SELECT * FROM tbl_cdi_log ORDER BY `date` DESC LIMIT 0,5");
@@ -317,11 +319,13 @@
 					$table->appendChild($tr);
 					$entryCount++;
 				}
-			} else {
-				$tr = new XMLElement('tr',null);
-				$tr->appendChild(new XMLElement('td','No CDI queries have been executed'));
-				$table->appendChild($tr);
 			}
+
+			$tr = new XMLElement('tr',null,array('class' => 'noLastQueriesCell'));
+			if($entryCount != 0) { $tr->setAttribute('style','display:none;'); }
+			$tr->appendChild(new XMLElement('td','No CDI queries have been executed on this instance'));
+			$table->appendChild($tr);
+
 			$div->appendChild($table);
 			return $div;
 		}

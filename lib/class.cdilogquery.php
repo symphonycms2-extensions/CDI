@@ -55,7 +55,7 @@
 		 * @param Timestamp $timestamp The UNIX timestamp on which the query was originally logged
 		 * @param Integer $order The execution order of the query (in case of multiple executions with the same timestamp)
 		 */
-		private static function rollback($hash,$timestamp,$order) {
+		public static function rollback($hash,$timestamp,$order) {
 			// do not rollback erronous changes to tbl_cdi_log
 			$tbl_prefix = Symphony::Configuration()->get('tbl_prefix', 'database');
 			if (preg_match("/{$tbl_prefix}cdi_log/i", $query)) return true;

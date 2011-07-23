@@ -28,12 +28,26 @@
 			if(is_writable(CDIROOT)) { return true; }
 			else { return false; }
 		}
+		
+		public static function hasDumpDBInstalled() {
+			return file_exists(EXTENSIONS . '/dump_db/extension.driver.php');
+		}
+		
+		public static function hasRequiredDumpDBVersion() {
+			if(self::hasDumpDBInstalled()) {
+				require_once(EXTENSIONS . '/dump_db/extension.driver.php');
+				$about = extension_dump_db::about();
+				return ($about["version"] == "1.08");
+			} else { 
+				return false; 
+			}
+		}
 
 		/**
 		 * Return the current author.
 		 * Only available if the author is logged into Symphony backend.
 		 */
-		private static function getAuthor() {
+		public static function getAuthor() {
 			$author = Administration::instance()->Author;
 			if (isset($author)) { 
 				return $author->getFullName(); 
@@ -46,7 +60,7 @@
 		 * Return the current URL from which the query is executed.
 		 * Only available if the query is executed from the Symphony backend.
 		 */
-		private static function getURL() {
+		public static function getURL() {
 			$url = Administration::instance()->getCurrentPageURL();
 			if (is_null($url)) { $url = ""; }
 			return $url;
@@ -55,7 +69,7 @@
 		/**
 		 * Return a line of Meta information to append to the query
 		 */
-		private static function getMetaData() {
+		public static function getMetaData() {
 			$meta = '-- ' . date('Y-m-d H:i:s', time());
 			$meta .= ', ' . CdiLogQuery::getAuthor();
 			$meta .= ', ' . CdiLogQuery::getURL();

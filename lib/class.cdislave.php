@@ -1,6 +1,7 @@
 <?php
 
 	require_once(EXTENSIONS . '/cdi/lib/class.cdiutil.php');
+	require_once(EXTENSIONS . '/cdi/lib/class.cdilogquery.php');
 	
 	class CdiSlave {
 
@@ -28,7 +29,7 @@
 		public static function update() {
 			// We should not be processing any queries when the extension is disabled or when we are the Master instance
 			// Check also exists on content page, but just to be sure!
-			if((!class_exists('Administration')) || !CdiUtil::isEnabled() || !CdiUtil::isCdiSlave) {
+			if((!class_exists('Administration')) || !CdiUtil::isEnabled() || !CdiUtil::isCdiSlave()) {
 				echo "WARNING: CDI is disabled or you are running the queryies on the Master instance. No queries have been executed.";
 				return;
 			}
@@ -36,7 +37,7 @@
 			// Prevent the CdiLogQuery::log() from persisting queries that are executed by CDI itself
 			// Technically this should not be possible because it will not log queries on a SLAVE instance
 			// and you can only run the executeQueries when in SLAVE mode. This is just to be sure.
-			CdiLogQuery::$isUpdating = true;
+			CdiLogQuery::isUpdating(true);
 			
 			try {
 				$skipped = 0;
@@ -63,7 +64,7 @@
 							// The query has not been found in the log, thus it has not been executed
 							// So let's execute the query and add it to the log!
 							Symphony::Database()->query("INSERT INTO `tbl_cdi_log` (`query_hash`,`author`,`url`,`date`,`order`)
-														 VALUES ('" . $hash . "','" . CdiLogQuery::getAuthor() . "','" . CdiLogQuery::getURL() . "','" . $date . "'," . $order . ")");
+														 VALUES ('" . $hash . "','" . CdiUtil::getAuthor() . "','" . CdiUtil::getURL() . "','" . $date . "'," . $order . ")");
 							Symphony::Database()->query($query);
 							$executed++;
 						} else {
@@ -90,7 +91,7 @@
 			Administration::instance()->saveConfig();
 			
 			// Re-enable CdiLogQuery::log() to persist queries
-			CdiLogQuery::$isUpdating = false;
+			CdiLogQuery::isUpdating(false);
 		}
 	}
 ?>
