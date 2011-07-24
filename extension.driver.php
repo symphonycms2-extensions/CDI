@@ -69,9 +69,8 @@
 
 		public function fetchNavigation() {
 			return array(
-				array('location' => 'System', 'link' => '/save/'),
-				array('location' => 'System', 'link' => '/update/'),
-				array('location' => 'System', 'link' => '/restore/')
+				array('location' => 'System', 'link' => '/actions/'),
+				array('location' => 'System', 'link' => '/update/')
 			);
 		}
 		

@@ -43,13 +43,14 @@ if(!window.Symphony) { var Symphony = {}; }
 			});
 		},
 		
+		//TODO: implement loading indicators for AJAX requests
 		processAction: function(oElm,event) {
 			var sAction = oElm.name;
 			if(sAction == 'action[cdi_import]') { 
 				oElm.form.submit(); 
 			} else {
 				var sData = oElm.name + '=true&ref=' + oElm.getAttribute('ref');
-				jQuery.post(Symphony.WEBSITE + '/symphony/extension/cdi/save/',sData, function(data) {
+				jQuery.post(Symphony.WEBSITE + '/symphony/extension/cdi/actions/',sData, function(data) {
 					if(data.status == 'success') {
 						switch(sAction) {
 							case 'action[cdi_clear]':
@@ -93,6 +94,13 @@ if(!window.Symphony) { var Symphony = {}; }
 									});
 								});
 								break;
+								
+							case 'action[cdi_restore]':
+								jQuery(oElm).fadeOut('slow',function() {
+									jQuery(this).replaceWith('<span style="color: green;">Restored</span>');
+								});
+								break;
+
 						}
 					}
 				});
