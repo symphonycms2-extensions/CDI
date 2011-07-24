@@ -50,7 +50,13 @@
 	// CDI Export
 	else if(isset($_POST["action"]["cdi_export"])) {
 		try {
-			CdiDumpDB::backup();
+			if(isset($_POST['ref']) && $_POST['ref'] == "overwrite"){
+				Symphony::Configuration()->set('manual-backup-overwrite', 'yes', 'cdi');
+			} else {
+				Symphony::Configuration()->set('manual-backup-overwrite', 'no', 'cdi');
+			}
+
+			CdiDumpDB::backup('manual');
 			$result["status"] = 'success';
 			$result["result"] = htmlspecialchars(CdiPreferences::appendRestore()->generate());
 		} catch(Exception $e) {

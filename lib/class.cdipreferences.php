@@ -195,6 +195,13 @@
 			} else {
 				Symphony::Configuration()->set('backup-overwrite', 'no', 'cdi');
 			}
+
+			// manual-backup-overwrite
+			if(isset($_POST['settings']['cdi']['manual-backup-overwrite'])) {
+				Symphony::Configuration()->set('manual-backup-overwrite', 'yes', 'cdi');
+			} else {
+				Symphony::Configuration()->set('manual-backup-overwrite', 'no', 'cdi');
+			}
 			
 			// restore-enabled
 			if(isset($_POST['settings']['cdi']['restore-enabled'])) {
@@ -326,7 +333,7 @@
 						$filename = split('-',$file);
 						if($entryCount == 5) { break; }
 						$tr = new XMLElement('tr',null);
-						$tr->appendChild(new XMLElement('td',date('d-m-Y h:m:s', (int)$filename[0]),array('style' => 'vertical-align:middle;')));
+						$tr->appendChild(new XMLElement('td',date('d-m-Y H:i:s', (int)$filename[0]),array('style' => 'vertical-align:middle;')));
 						$td = new XMLElement('td',null,array('width' => '75'));
 						$button = new XMLElement('input',null, array('value' => 'Restore', 'name' => 'action[cdi_restore]', 'type' => 'button', 'class' => 'restore_action', 'ref' => $file));
 						$td->appendChild($button);
@@ -457,10 +464,12 @@
 			
 			$label = Widget::Label();
 			$label->setAttribute('style','margin: -12px 0 12px 62px;position:relative;padding-left:18px;');
-			$input = Widget::Input('settings[cdi][backup-overwrite]', 'yes', 'checkbox');
+			$input = Widget::Input('settings[cdi][manual-backup-overwrite]', 'yes', 'checkbox');
 			$input->setAttribute('style','position:absolute;left:0px;');
-			$input->setAttribute('class','backup-overwrite');
-			$input->setAttribute('checked', 'checked');
+			$input->setAttribute('class','manual-backup-overwrite');
+			if(Symphony::Configuration()->get('manual-backup-overwrite', 'cdi') == 'yes') { 
+				$input->setAttribute('checked', 'checked'); 
+			}
 			$label->setValue($input->generate() . ' Overwrite existing backup file');
 			$div->appendChild($label);
 			

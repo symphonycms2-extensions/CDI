@@ -3,7 +3,8 @@
 	define('CDIROOT',MANIFEST . '/cdi',false);
 	define('CDI_FILE', CDIROOT . '/cdi.sql');
 	define('CDI_DB_SYNC_FILE', CDIROOT . '/db_sync.sql');
-	define('CDI_BACKUP_FILE', CDIROOT . '/%scdi-db-backup.sql');
+	define('CDI_BACKUP_ROOT', CDIROOT . '/export');
+	define('CDI_BACKUP_FILE', CDI_BACKUP_ROOT . '/%scdi-db-backup.sql');
 
 	class CdiUtil {
 		

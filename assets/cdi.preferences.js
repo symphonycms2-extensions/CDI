@@ -37,6 +37,10 @@ if(!window.Symphony) { var Symphony = {}; }
 					oElm.checked = chk;
 				});
 			});
+			
+			jQuery('.manual-backup-overwrite').click(function(event) {
+				jQuery('.cdi_export_action').attr('ref',(this.checked ? "overwrite" : ""));
+			});
 		
 			jQuery('input[class*="_action"]').click(function(event) {
 				Symphony.cdiExtension.processAction(this,event);

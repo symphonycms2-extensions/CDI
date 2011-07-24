@@ -20,9 +20,12 @@
 		
 		public function install() {
 			CdiSlave::install();
+			if(CdiUtil::hasRequiredDumpDBVersion()) {
+				CdiDumpDB::install();
+			}
+
 			Symphony::Configuration()->set('enabled', 'yes', 'cdi');
 			Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
-			
 			Administration::instance()->saveConfig();
 			return true;
 		}
