@@ -9,7 +9,7 @@
 			return array(
 				'name'			=> 'Continuous Database Integration',
 				'version'		=> '0.4.0',
-				'release-date'	=> '2011-07-23',
+				'release-date'	=> '2011-07-24',
 				'author'		=> array(
 					'name'			=> 'Remie Bolte, Nick Dunn, Richard Warrender',
 					'email'			=> 'r.bolte@gmail.com'

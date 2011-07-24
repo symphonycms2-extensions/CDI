@@ -1,8 +1,8 @@
 # Continuous Database Integration
 
-* Version: 0.3.0
+* Version: 0.4.0
 * Author: Remie Bolte <http://github.com/remie>
-* Build Date: 2011-07-22
+* Build Date: 2011-07-24
 * Requirements: Symphony 2.2.1, requires a small modification to class.mysql.php (see below)
 
 Special thanks go out to Nick Dunn <http://github.com/nickdunn/> and Richard Warrender <http://github.com/rwarrender>. 
@@ -31,9 +31,11 @@ to create a backup of your data in production, and only run the upgrade in maint
 
 ## Roadmap
 
-* Add support for DATA changes from the backend
+* Small UI bug fixes (see TODO notations in project files)
 
 * Implement a rolling file appending strategy to prevent the aggregated SQL files from becoming to large
+
+* Add support for DATA changes from the backend
 
 * Add support for DATA changes from the front-end
 
