@@ -333,7 +333,8 @@
 						$filename = split('-',$file);
 						if($entryCount == 5) { break; }
 						$tr = new XMLElement('tr',null);
-						$tr->appendChild(new XMLElement('td',date('d-m-Y H:i:s', (int)$filename[0]),array('style' => 'vertical-align:middle;')));
+						$tr->appendChild(new XMLElement('td',date('d-m-Y H:i:s', (int)$filename[0]),array('width' => '150', 'style' => 'vertical-align:middle;')));
+						$tr->appendChild(new XMLElement('td',$filename[1],array('style' => 'vertical-align:middle;')));
 						$td = new XMLElement('td',null,array('width' => '75'));
 						$button = new XMLElement('input',null, array('value' => 'Restore', 'name' => 'action[cdi_restore]', 'type' => 'button', 'class' => 'restore_action', 'ref' => $file));
 						$td->appendChild($button);

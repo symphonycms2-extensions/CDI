@@ -56,10 +56,14 @@
 				   ($mode == 'manual' && Symphony::Configuration()->get('manual-backup-overwrite', 'cdi') == 'yes')) {
 					self::uninstall();
 				}
-				file_put_contents(sprintf(CDI_BACKUP_FILE, time() . '-'),$sql);
+				$filename = sprintf(CDI_BACKUP_FILE, time() . '-' . $mode . '-');
+				file_put_contents($filename,$sql);
 				
 				// Re-enable CdiLogQuery::log() to persist queries
 				CdiLogQuery::isUpdating(false);
+
+				// Return the filename of the backup for automatic restore
+				return $filename;
 			}
 		}
 		

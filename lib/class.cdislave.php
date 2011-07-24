@@ -39,6 +39,27 @@
 			// and you can only run the executeQueries when in SLAVE mode. This is just to be sure.
 			CdiLogQuery::isUpdating(true);
 			
+			// Switch to maintenance mode
+			if(Symphony::Configuration()->get('maintenance-enabled', 'cdi') == 'yes') {
+				Symphony::Configuration()->set('enabled', 'yes', 'maintenance_mode');
+				Administration::instance()->saveConfig();			
+			}
+			
+			// Implement automatic backup before processing structural changes
+			if(Symphony::Configuration()->get('backup-enabled', 'cdi') == 'yes') {
+				try {
+					if(CdiUtil::hasRequiredDumpDBVersion()) {
+						require_once(EXTENSIONS . '/cdi/lib/class.cdidumpdb.php');
+						$currentBackup = CdiDumpDB::backup("automatic");
+					} else {
+						throw new Exception('You can only enable automatic backup files when the "Dump DB" extension (version 1.08) is installed and enabled.');
+					}
+				}catch (Exception $e) {
+					echo "ERROR: " . $e->getMessage() , ". Failed to backup database before update, aborting.";
+					die();
+				}
+			}
+			
 			try {
 				$skipped = 0;
 				$executed = 0;
@@ -75,7 +96,29 @@
 						//TODO: think of some smart way of dealing with errors, perhaps through the preference screen or a CDI Status content page?
 						//Due to the error we need to perform a rollback to allow this query to be executed at a later stage.
 						CdiLogQuery::rollback($hash,$ts,$order);
-						echo "ERROR: " . $e->getMessage() , ". Rollback has been executed.";
+						
+						// Implement automatic restore on error
+						if((Symphony::Configuration()->get('backup-enabled', 'cdi') == 'yes') &&
+						   (Symphony::Configuration()->get('restore-enabled', 'cdi') == 'yes')) {
+							try {
+								CdiDumpDB::restore($currentBackup);
+							}catch (Exception $r) {
+								echo "ERROR: " . $r->getMessage() , ". Failed to restore latest database backup. This instance needs immediate attention!";
+								die();
+							}
+
+							// Restore was succesful, at least we can jump out of maintenance mode
+							if(Symphony::Configuration()->get('maintenance-enabled', 'cdi') == 'yes') {
+								Symphony::Configuration()->set('enabled', 'no', 'maintenance_mode');
+								Administration::instance()->saveConfig();
+							}
+							
+							echo "ERROR: " . $e->getMessage() , ". Rollback & Restore have been executed.";
+						} else {
+							echo "ERROR: " . $e->getMessage() , ". Rollback has been executed.";
+						}
+						
+						// Stop processing
 						die();
 					}
 				}
@@ -88,6 +131,11 @@
 
 			// Save the last update date to configuration
 			Symphony::Configuration()->set('last-update', time(), 'cdi');
+			// No more maintenance mode
+			if(Symphony::Configuration()->get('maintenance-enabled', 'cdi') == 'yes') {
+				Symphony::Configuration()->set('enabled', 'no', 'maintenance_mode');
+			}
+			
 			Administration::instance()->saveConfig();
 			
 			// Re-enable CdiLogQuery::log() to persist queries
