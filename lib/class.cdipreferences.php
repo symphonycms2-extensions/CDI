@@ -62,7 +62,6 @@
 				
 			// Add sections to preference group
 			$section = new XMLElement('div',null,array('class' => 'cdi'));
-			if(!CdiUtil::isCdiMaster() && !CdiUtil::isCdiSlave()) { $section->setAttribute('style','display: none;'); }
 				
 			$section->appendChild($header);
 			$main->appendChild($leftColumn);
@@ -80,16 +79,25 @@
 			$rightColumn = new XMLElement('div',null);
 			$footer = new XMLElement('div',null);
 			
-				$leftColumn->appendChild(self::appendDBSyncImport());
-				$leftColumn->appendChild(self::appendDBExport());
-				$leftColumn->appendChild(self::appendClearLog());
-				
-				$rightColumn->appendChild(self::appendDumpDB());
-				$rightColumn->appendChild(self::appendRestore());
+				if(CdiUtil::isCdiDBSyncMaster()) {
+					$header->appendChild(self::appendInstanceMode());
+					if(file_exists(CDI_DB_SYNC_FILE)) {
+						$header->appendChild(self::appendClearLog());
+					}
+					$leftColumn->appendChild(self::appendDBExport());
+					$rightColumn->appendChild(self::appendRestore());
+				} else if(CdiUtil::isCdiDBSyncSlave()) {
+					$leftColumn->appendChild(self::appendDBSyncImport());
+					$leftColumn->appendChild(self::appendDBExport());
+					$leftColumn->appendChild(self::appendClearLog());
+					
+					$rightColumn->appendChild(self::appendInstanceMode());
+					$rightColumn->appendChild(self::appendDumpDB());
+					$rightColumn->appendChild(self::appendRestore());
+				}
 
 			// Add sections to preference group
 			$section = new XMLElement('div',null,array('class' => 'db_sync'));
-			if(!CdiUtil::isCdiDBSync()) { $section->setAttribute('style','display: none;'); }
 				
 			$section->appendChild($header);
 			$main->appendChild($leftColumn);
@@ -119,7 +127,12 @@
 						break;
 						
 					case "db_sync":
-						Symphony::Configuration()->set('mode', 'CdiDBSync', 'cdi');
+						// Instance Mode
+						if(isset($_POST['settings']['cdi']['is-slave'])) {
+							Symphony::Configuration()->set('mode', 'CdiDBSyncSlave', 'cdi');							
+						} else {
+							Symphony::Configuration()->set('mode', 'CdiDBSyncMaster', 'cdi');
+						}
 						CdiDBSync::install();
 						break;
 				}
@@ -173,7 +186,7 @@
 			$input->setAttribute('style','position:absolute;left:0px;');
 			$input->setAttribute('class','instance-mode');
 			if(CdiUtil::canBeMasterInstance()) {
-				if(CdiUtil::isCdiSlave()) { $input->setAttribute('checked', 'checked'); }
+				if(CdiUtil::isCdiSlave() || CdiUtil::isCdiDBSyncSlave()) { $input->setAttribute('checked', 'checked'); }
 				$label->setValue($input->generate() . ' This is a "Slave" instance (no structural changes will be registered)');
 			} else {
 				$input->setAttribute('checked', 'checked');
@@ -181,9 +194,15 @@
 				$label->setValue($input->generate() . ' This can only be a "Slave" instance due to insufficient write permissions.');
 			}
 			$div->appendChild($label);
-			$div->appendChild(new XMLElement('p', 'The extension is designed to allow automatic propagation of structural changes between environments in a DTAP setup.
-												   It is imperitive that you have a single "Master" instance (usually your development environment). This is important because the auto-increment values need to be exactly the same on each database table in every environment. 
-												   Switching between modes is therefore not recommended. If needed, make sure you only switch instance mode after you have ensured that you have restored all databases from the same source and cleared the CDI logs on all instances.', array('class' => 'help')));
+			if(CdiUtil::isCdiMaster() || CdiUtil::isCdiSlave()) {
+				$div->appendChild(new XMLElement('p', 'The extension is designed to allow automatic propagation of structural changes between environments in a DTAP setup.
+													   It is imperitive that you have a single "Master" instance (usually your development environment). This is important because the auto-increment values need to be exactly the same on each database table in every environment. 
+													   Switching between modes is therefore not recommended. If needed, make sure you only switch instance mode after you have ensured that you have restored all databases from the same source and cleared the CDI logs on all instances.', array('class' => 'help')));
+			} else if (CdiUtil::isCdiDBSync()) {
+				$div->appendChild(new XMLElement('p', 'The extension is designed to allow manual propagation of structural changes between environments in a DTAP setup.
+													   It is imperitive that you have a single "Master" instance (usually your development environment). This is important because the auto-increment values need to be exactly the same on each database table in every environment. 
+													   Switching between modes is therefore not recommended. If needed, make sure you only switch instance mode after you have ensured that you have restored all databases from the same source.', array('class' => 'help')));
+			}
 			$div->appendChild(new XMLElement('p', 'You need to save your changes before you can configure this instance, or reload the page to cancel.<br />Be advised: changing instances mode will reset any instance specific configuration settings', array('class' => 'cdiInstanceRestart', 'style' => 'display:none;')));
 			return $div;
 		}
@@ -257,7 +276,7 @@
 		public static function appendRestore() {
 			$div = new XMLElement('div', NULL,array('style'=>'margin-bottom: 1.5em;','class' => 'cdiRestore'));
 			if(CdiUtil::hasRequiredDumpDBVersion()) {
-				$div->appendChild(new XMLElement('h3','Restore Symphony Database',array('style' => 'margin: 5px 0;')));
+				$div->appendChild(new XMLElement('h3','Restore Symphony database',array('style' => 'margin: 5px 0;')));
 				$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
 				$files = CdiDumpDB::getBackupFiles();
 				if(count($files) > 0) {
@@ -276,7 +295,7 @@
 					}
 				} else {
 					$tr = new XMLElement('tr',null);
-					$tr->appendChild(new XMLElement('td','There are no entries in the CDI log'));
+					$tr->appendChild(new XMLElement('td','There is no recent Symphony database to restore'));
 					$table->appendChild($tr);
 				}
 				$div->appendChild($table);
@@ -342,12 +361,26 @@
 				$span = new XMLElement('span',NULL,array('class' => 'frame'));
 				$span->appendChild(new XMLElement('input',NULL,array('name' => 'cdi_import_file', 'type' => 'file')));
 				$div->appendChild($span);
+				
+				$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
+				$button->appendChild(new XMLElement('input',null,array('value' => 'Import', 'name' => 'action[cdi_import]', 'type' => 'button', 'class' => 'cdi_import_action')));
+				$button->appendChild(new XMLElement('span','&nbsp;Press "Import" to synchronise the Symphony Database.'));
+				$div->appendChild($button);
+			} else {
+				$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
+				$button->appendChild(new XMLElement('input',null,array('value' => 'Import', 'name' => 'action[cdi_import]', 'type' => 'button', 'class' => 'cdi_import_action')));
+				$button->appendChild(new XMLElement('span','&nbsp;Press "Import" to synchronise the Symphony Database.'));
+				$div->appendChild($button);
+				
+				$label = Widget::Label();
+				$label->setAttribute('style','margin: -12px 0 12px 62px;position:relative;padding-left:18px;');
+				$input = Widget::Input('settings[cdi][deleteSyncFile]', 'yes', 'checkbox');
+				$input->setAttribute('style','position:absolute;left:0px;');
+				$input->setAttribute('checked', 'checked');
+				$label->setValue($input->generate() . ' Remove <em>db_sync.sql</em> after a succesful import');
+				$div->appendChild($label);
 			}
 			
-			$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
-			$button->appendChild(new XMLElement('input',null,array('value' => 'Import', 'name' => 'action[cdi_import]', 'type' => 'button', 'class' => 'cdi_import_action')));
-			$button->appendChild(new XMLElement('span','&nbsp;Press "Import" to synchronise the Symphony Database.'));
-			$div->appendChild($button);
 			$div->appendChild(new XMLElement('p', 'All SQL statements in the Database Synchroniser file will be executed on this Symphony instance. When all statements have been succesfully imported the file will be deleted.', array('class' => 'help')));
 			return $div;
 		}
@@ -364,15 +397,23 @@
 		}
 
 		public static function appendClearLog() {
-			$div = new XMLElement('div',NULL);
+			$div = new XMLElement('div',NULL,array('class' => 'cdiClear'));
 			$div->appendChild(new XMLElement('h3','Clear Log Entries',array('style' => 'margin-bottom: 5px;')));
 			$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
 			$button->appendChild(new XMLElement('input', null, array('value' => 'Clear', 'name' => 'action[cdi_clear]', 'type' => 'button', 'class' => 'cdi_clear_action')));
-			$button->appendChild(new XMLElement('span','&nbsp;Press "Clear" to remove all CDI log entries from disk and/or Symphony Database'));
-			$div->appendChild($button);
-			$div->appendChild(new XMLElement('p', 'You can use the "Clear" button to clean up old CDI logs. 
-													 Ensure that all your Symphony have been updated either by CDI (check the last executed queries list above) or by manually restoring the same database backup on all instances.
-													 Make sure that you clear the log files on every instance (including the "Master" instance). It is important that the database schemas are synchronized before starting with a clean sheet.', array('class' => 'help')));
+			if(CdiUtil::isCdi()) {
+				$button->appendChild(new XMLElement('span','&nbsp;Press "Clear" to remove all CDI log entries from disk and/or Symphony Database'));
+				$div->appendChild($button);
+				$div->appendChild(new XMLElement('p', 'You can use the "Clear" button to clean up old CDI logs. 
+														 Ensure that all your Symphony have been updated either by CDI (check the last executed queries list above) or by manually restoring the same database backup on all instances.
+														 Make sure that you clear the log files on every instance (including the "Master" instance). It is important that the database schemas are synchronized before starting with a clean sheet.', array('class' => 'help')));
+			} else {
+				$button->appendChild(new XMLElement('span','&nbsp;Press "Clear" to remove <em>db_sync.sql</em> from disk'));
+				$div->appendChild($button);
+				$div->appendChild(new XMLElement('p', 'You can use the "Clear" button to remove current <em>db_sync.sql</em> file. 
+													   Ensure that all your Symphony have been updated either by CDI or by manually restoring the same database backup on all instances.
+													   Make sure that you clear the <em>db_sync.sql</em> files on every instance (including the "Master" instance). It is important that the database schemas are synchronized before starting with a clean sheet.', array('class' => 'help')));
+			}
 			return $div;
 		}		
 		

@@ -9,12 +9,11 @@ jQuery(document).ready(function () {
 	});
 	
 	jQuery('.instance-mode').click(function(event) {
-		var oParent = jQuery(this).closest('.cdi');
+		var oParent = jQuery(this).closest('.cdi, .db_sync');
 		var oElm = jQuery(this).closest('div').detach();
 		oParent.before(oElm);
 		oParent.detach();
 
-		oElm.addClass('cdi');
 		jQuery('.cdiInstanceRestart').removeAttr('style');
 		jQuery(this).unbind(event);
 	});
@@ -35,6 +34,7 @@ jQuery(document).ready(function () {
 	});
 
 	jQuery('input[class*="_action"]').click(function(event) {
+		var oThis = this;
 		var sAction = this.name;
 		if(sAction == 'action[cdi_import]') { 
 			this.form.submit(); 
@@ -50,11 +50,17 @@ jQuery(document).ready(function () {
 							
 							oTable.empty();
 							oTable.append(oEmptyTableCell);
+							
+							jQuery(oThis).closest('.cdiClear').fadeOut("slow", function() {
+								jQuery(this).detach();
+							});
 							break;
 							
 						case 'action[cdi_export]':
 							var oResult = jQuery('<div />').html(data.result).text();
-							oResult = jQuery('.cdiRestore').replaceWith(oResult);
+							jQuery('.cdiRestore').fadeOut('slow', function() {
+								oResult = jQuery('.cdiRestore').replaceWith(oResult);
+							});
 							break;
 					}
 				}

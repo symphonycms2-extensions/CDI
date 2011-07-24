@@ -1,5 +1,7 @@
 <?php
 	
+	require_once(EXTENSIONS . '/cdi/lib/class.cdiutil.php');
+
 	class CdiLogQuery {
 		private static $isUpdating;
 	
@@ -16,10 +18,9 @@
 		public static function log($query) {
 			// Prevent execution on the frontend and check configuration conditions
 			// Do not log the query when CDI is disabled, in SLAVE mode or busy executing queries.
-			if((!class_exists('Administration')) ||
-			   (Symphony::Configuration()->get('enabled', 'cdi') == 'no') ||
-			   (Symphony::Configuration()->get('mode', 'cdi') == 'CdiSlave') ||
-			   (CdiLogQuery::$isUpdating)) { return true; }
+			if((!class_exists('Administration')) || !CdiUtil::isEnabled() || self::$isUpdating) {
+				return true;
+			}
 			
 			$query = trim($query);
 			$tbl_prefix = Symphony::Configuration()->get('tbl_prefix', 'database');
@@ -39,10 +40,11 @@
 			// We've come far enough... let's try to save it to disk!
 			if(CdiUtil::isCdiMaster()) {
 				return CdiMaster::persistQuery($query);
-			} else if(CdiUtil::isCdiDBSync()) {
+			} else if(CdiUtil::isCdiDBSyncMaster()) {
 				return CdiDBSync::persistQuery($query);
 			} else {
 				//TODO: error handling for the unusual event that we are dealing with here.
+				return true;
 			}
 		}
 	

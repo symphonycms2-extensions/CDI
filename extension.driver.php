@@ -91,9 +91,12 @@
 			$group->setAttribute('class', 'cdi settings');
 			$group->appendChild(new XMLElement('legend', 'Continuous Database Integration'));
 
-			$group->appendChild(CdiPreferences::appendCdiMode());			
-			$group->appendChild(CdiPreferences::appendCdiPreferences());
-			$group->appendChild(CdiPreferences::appendDBSyncPreferences());
+			$group->appendChild(CdiPreferences::appendCdiMode());
+			if(CdiUtil::isCdi()) {
+				$group->appendChild(CdiPreferences::appendCdiPreferences());
+			} else if(CdiUtil::isCdiDBSync()) {
+				$group->appendChild(CdiPreferences::appendDBSyncPreferences());
+			}
 
 			// Append preferences
 			$context['wrapper']->appendChild($group);

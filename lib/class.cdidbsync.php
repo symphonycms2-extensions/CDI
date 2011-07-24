@@ -11,7 +11,7 @@
 		}
 		
 		public static function uninstall() {
-			if(file_exists(DB_SYNC_FILE)) { unlink(DB_SYNC_FILE); }
+			if(file_exists(CDI_DB_SYNC_FILE)) { unlink(CDI_DB_SYNC_FILE); }
 		}
 		
 		public static function persistQuery($query) {
@@ -24,8 +24,7 @@
 
 			$line .= $query . "\n";
 			
-			$logfile = DB_SYNC_FILE;
-			$handle = @fopen($logfile, 'a');
+			$handle = @fopen(CDI_DB_SYNC_FILE, 'a');
 			fwrite($handle, $line);
 			fclose($handle);			
 		}		
@@ -44,7 +43,7 @@
 			CdiLogQuery::isUpdating(true);
 
 			// Handle file upload
-			$syncFile = DB_SYNC_FILE;
+			$syncFile = CDI_DB_SYNC_FILE;
 			if(isset($_FILES['cdi_import_file'])) {
 				$syncFile = $_FILES['cdi_import_file']['tmp_name'];
 			}

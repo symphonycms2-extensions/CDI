@@ -2,13 +2,17 @@
 
 	define('CDIROOT',MANIFEST . '/cdi',false);
 	define('CDI_FILE', CDIROOT . '/cdi.sql');
-	define('DB_SYNC_FILE', CDIROOT . '/db_sync.sql');
+	define('CDI_DB_SYNC_FILE', CDIROOT . '/db_sync.sql');
 	define('CDI_BACKUP_FILE', CDIROOT . '/%scdi-db-backup.sql');
 
 	class CdiUtil {
 		
 		public static function isEnabled() {
 			return (Symphony::Configuration()->get('enabled', 'cdi') == 'yes');
+		}
+		
+		public static function isCdi() {
+			return (self::isCdiMaster() || self::isCdiSlave());
 		}
 		
 		public static function isCdiSlave() {
@@ -20,9 +24,17 @@
 		}
 		
 		public static function isCdiDBSync() {
-			return (Symphony::Configuration()->get('mode', 'cdi') == 'CdiDBSync');
+			return (self::isCdiDBSyncMaster() || self::isCdiDBSyncSlave());
+		}
+		
+		public static function isCdiDBSyncMaster() {
+			return (Symphony::Configuration()->get('mode', 'cdi') == 'CdiDBSyncMaster');
 		}
 
+		public static function isCdiDBSyncSlave() {
+			return (Symphony::Configuration()->get('mode', 'cdi') == 'CdiDBSyncSlave');
+		}
+		
 		public static function canBeMasterInstance() {
 			if(!file_exists(CDIROOT) && is_writable(MANIFEST)) { return true; }
 			if(is_writable(CDIROOT)) { return true; }
