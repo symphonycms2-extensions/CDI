@@ -84,12 +84,20 @@
 					if(file_exists(CDI_DB_SYNC_FILE)) {
 						$header->appendChild(self::appendClearLog());
 					}
-					$leftColumn->appendChild(self::appendDBExport());
+					if(CdiUtil::hasRequiredDumpDBVersion()) {
+						$leftColumn->appendChild(self::appendDBExport());
+					}
 					$rightColumn->appendChild(self::appendRestore());
 				} else if(CdiUtil::isCdiDBSyncSlave()) {
 					$leftColumn->appendChild(self::appendDBSyncImport());
-					$leftColumn->appendChild(self::appendDBExport());
-					$leftColumn->appendChild(self::appendClearLog());
+					$leftColumn->appendChild(self::appendDBSyncImportFile());
+					
+					if(CdiUtil::hasRequiredDumpDBVersion()) {
+						$leftColumn->appendChild(self::appendDBExport());
+					}					
+					if(file_exists(CDI_DB_SYNC_FILE)) {
+						$leftColumn->appendChild(self::appendClearLog());
+					}
 					
 					$rightColumn->appendChild(self::appendInstanceMode());
 					$rightColumn->appendChild(self::appendDumpDB());
@@ -352,36 +360,47 @@
 			$div->appendChild($table);
 			return $div;
 		}
-		
+
 		public static function appendDBSyncImport() {
-			$div = new XMLElement('div', NULL);
+			$div = new XMLElement('div', NULL, array('class' => 'cdiImport'));
 			$div->appendChild(new XMLElement('h3','Import SQL Statements',array('style' => 'margin-bottom: 5px;')));
-			if(!file_exists(CDIROOT . '/db_sync.sql')) {
-				Administration::instance()->Page->Form->setAttribute('enctype', 'multipart/form-data');
-				$span = new XMLElement('span',NULL,array('class' => 'frame'));
-				$span->appendChild(new XMLElement('input',NULL,array('name' => 'cdi_import_file', 'type' => 'file')));
-				$div->appendChild($span);
-				
-				$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
-				$button->appendChild(new XMLElement('input',null,array('value' => 'Import', 'name' => 'action[cdi_import]', 'type' => 'button', 'class' => 'cdi_import_action')));
-				$button->appendChild(new XMLElement('span','&nbsp;Press "Import" to synchronise the Symphony Database.'));
-				$div->appendChild($button);
-			} else {
-				$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
-				$button->appendChild(new XMLElement('input',null,array('value' => 'Import', 'name' => 'action[cdi_import]', 'type' => 'button', 'class' => 'cdi_import_action')));
-				$button->appendChild(new XMLElement('span','&nbsp;Press "Import" to synchronise the Symphony Database.'));
-				$div->appendChild($button);
-				
-				$label = Widget::Label();
-				$label->setAttribute('style','margin: -12px 0 12px 62px;position:relative;padding-left:18px;');
-				$input = Widget::Input('settings[cdi][deleteSyncFile]', 'yes', 'checkbox');
-				$input->setAttribute('style','position:absolute;left:0px;');
-				$input->setAttribute('checked', 'checked');
-				$label->setValue($input->generate() . ' Remove <em>db_sync.sql</em> after a succesful import');
-				$div->appendChild($label);
-			}
+			
+			$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
+			$button->appendChild(new XMLElement('input',null,array('value' => 'Import', 'name' => 'action[cdi_import]', 'type' => 'submit', 'class' => 'cdi_import_action')));
+			$button->appendChild(new XMLElement('span','&nbsp;Press "Import" to synchronise the Symphony Database.'));
+			$div->appendChild($button);
+			
+			$label = Widget::Label();
+			$label->setAttribute('style','margin: -12px 0 12px 62px;position:relative;padding-left:18px;');
+			$input = Widget::Input('settings[cdi][deleteSyncFile]', 'yes', 'checkbox');
+			$input->setAttribute('style','position:absolute;left:0px;');
+			$input->setAttribute('checked', 'checked');
+			$label->setValue($input->generate() . ' Remove <em>db_sync.sql</em> after a succesful import');
+			$div->appendChild($label);
 			
 			$div->appendChild(new XMLElement('p', 'All SQL statements in the Database Synchroniser file will be executed on this Symphony instance. When all statements have been succesfully imported the file will be deleted.', array('class' => 'help')));
+
+			if(!file_exists(CDI_DB_SYNC_FILE)) { $div->setAttribute('style','display: none'); }
+			return $div;
+		}
+		
+		public static function appendDBSyncImportFile() {
+			$div = new XMLElement('div', NULL,array('class' => 'cdiImportFile'));
+			$div->appendChild(new XMLElement('h3','Import SQL Statements',array('style' => 'margin-bottom: 5px;')));
+
+			Administration::instance()->Page->Form->setAttribute('enctype', 'multipart/form-data');
+			$span = new XMLElement('span',NULL,array('class' => 'frame'));
+			$span->appendChild(new XMLElement('input',NULL,array('name' => 'cdi_import_file', 'type' => 'file')));
+			$div->appendChild($span);
+			
+			$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
+			$button->appendChild(new XMLElement('input',null,array('value' => 'Import', 'name' => 'action[cdi_import]', 'type' => 'submit', 'class' => 'cdi_import_action')));
+			$button->appendChild(new XMLElement('span','&nbsp;Press "Import" to synchronise the Symphony Database.'));
+			$div->appendChild($button);
+			
+			$div->appendChild(new XMLElement('p', 'All SQL statements in the Database Synchroniser file will be executed on this Symphony instance. When all statements have been succesfully imported the file will be deleted.', array('class' => 'help')));
+
+			if(file_exists(CDI_DB_SYNC_FILE)) { $div->setAttribute('style','display: none'); }
 			return $div;
 		}
 		

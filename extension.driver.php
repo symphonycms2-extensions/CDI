@@ -83,7 +83,7 @@
 			// Import the db_sync.sql file when the cdi_import action is called
 			// The import action is the only left to require a post-back because AJAX file upload is cumbersome
 			if(isset($_POST["action"]["cdi_import"])) {
-				CdiLogQuery::importSyncFile();
+				CdiDBSync::import();
 			}
 			
 			// Create the Preferences user-interface for the CDI extension

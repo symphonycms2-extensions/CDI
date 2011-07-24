@@ -35,16 +35,17 @@
 		 */
 		public static function import() {
 			// We should not be processing any queries when the extension is disabled or when it is in 'Continuous Database Integration' mode
-			if((!class_exists('Administration'))  || !CdiUtil::isEnabled || !CdiUtil::isCdiDBSync) {
-			   	throw new Exception("You can only import the Database Synchroniser file from the Preferences page. The CDI extension must be enabled and in 'Database Synchronisation' mode.");
+			if((!class_exists('Administration'))  || !CdiUtil::isEnabled() || !CdiUtil::isCdiDBSyncSlave()) {
+			   	throw new Exception("You can only import the Database Synchroniser file from the Preferences page. The CDI extension must be enabled and should be a 'Slave' instance in 'Database Synchronisation' mode.");
 			}
 			
 			// Prevent the CdiLogQuery::log() from persisting queries that are executed by CDI itself
+			// This should not be possible anyway because we can only import in "Slave" mode, but just to be sure!
 			CdiLogQuery::isUpdating(true);
 
 			// Handle file upload
 			$syncFile = CDI_DB_SYNC_FILE;
-			if(isset($_FILES['cdi_import_file'])) {
+			if(!empty($_FILES['cdi_import_file']['tmp_name'])) {
 				$syncFile = $_FILES['cdi_import_file']['tmp_name'];
 			}
 			
@@ -60,10 +61,14 @@
 							Symphony::Database()->query($query);
 						}
 					}
+					
+					if(isset($_POST['settings']['cdi']['deleteSyncFile'])) {
+						unlink($syncFile);
+					}
 				}
 			} catch (Exception $e) {
 				// Re-enable CdiLogQuery::log() to persist queries
-				CdiLogQuery::$isUpdating = false;
+				CdiLogQuery::isUpdating(false);
 				throw $e;
 			}
 

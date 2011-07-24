@@ -44,14 +44,20 @@ jQuery(document).ready(function () {
 				if(data.status == 'success') {
 					switch(sAction) {
 						case 'action[cdi_clear]':
-							var oTable = jQuery('.cdiLastQueries > table');
-							var oEmptyTableCell = jQuery('.cdiLastQueries .cdiNoLastQueriesCell');
-							oEmptyTableCell.removeAttr('style');
-							
-							oTable.empty();
-							oTable.append(oEmptyTableCell);
-							
 							jQuery(oThis).closest('.cdiClear').fadeOut("slow", function() {
+								// Update Query Log table
+								var oTable = jQuery('.cdiLastQueries > table');
+								var oEmptyTableCell = jQuery('.cdiLastQueries .cdiNoLastQueriesCell');
+								oEmptyTableCell.removeAttr('style');
+								
+								oTable.empty();
+								oTable.append(oEmptyTableCell);
+								
+								// Update Import method
+								jQuery('.cdiImport').detach();
+								jQuery('.cdiImportFile').fadeIn('slow');
+
+								// Remove the clear option
 								jQuery(this).detach();
 							});
 							break;

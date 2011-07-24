@@ -36,7 +36,11 @@
 			if (preg_match('/^(insert|delete|update)/i', $query) && preg_match("/({$config->tbl_prefix}entries)/i", $query)) return true;
 			// append query delimeter if it doesn't exist
 			if (!preg_match('/;$/', $query)) $query .= ";";
-	
+
+			// Replace the table prefix in the query
+			// This allows query execution on slave instances with different table prefix.
+			$query = str_replace($tbl_prefix,'tbl_',$query);
+			
 			// We've come far enough... let's try to save it to disk!
 			if(CdiUtil::isCdiMaster()) {
 				return CdiMaster::persistQuery($query);

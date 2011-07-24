@@ -31,11 +31,6 @@
 				} else {
 					self::$lastEntryOrder++;
 				}
-
-				// Replace the table prefix in the query
-				// This allows query execution on slave instances with different table prefix.
-				$tbl_prefix = Symphony::Configuration()->get('tbl_prefix', 'database');
-				$query = str_replace($tbl_prefix,'tbl_',$query);
 				
 				$id = $ts . '-' . self::$lastEntryOrder;
 				$hash = md5($id . $query);
