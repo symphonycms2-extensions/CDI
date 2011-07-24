@@ -13,6 +13,90 @@
 			Public static functions
 		-------------------------------------------------------------------------*/	
 		
+			public static function save() {
+			// CDI & Instance Mode
+			if(isset($_POST['settings']['cdi']['cdi-mode'])){
+				switch($_POST['settings']['cdi']['cdi-mode']) {
+					case "cdi":
+						//TODO: when switching between CDI modes, if you go from DBSync to CDI
+						//it will default to CdiMaster because the 'is-slave' variable is not set
+						//this is an unwanted side-effect of this generic implementation because the default should be CdiSlave.
+						
+						// Instance Mode
+						if(isset($_POST['settings']['cdi']['is-slave'])){
+							if(!CdiUtil::isCdiSlave()) {
+								Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
+								CdiSlave::install();
+							}
+						} else {
+							if(!CdiUtil::isCdiMaster()) {
+								Symphony::Configuration()->set('mode', 'CdiMaster', 'cdi');
+								CdiMaster::install();
+							}
+						}
+						break;
+						
+					case "db_sync":
+						// Instance Mode
+						if(isset($_POST['settings']['cdi']['is-slave'])) {
+							if(!CdiUtil::isCdiDBSyncSlave()) {
+								Symphony::Configuration()->set('mode', 'CdiDBSyncSlave', 'cdi');							
+								CdiDBSync::install();
+							}
+						} else {
+							if(!CdiUtil::isCdiDBSyncMaster()) {
+								Symphony::Configuration()->set('mode', 'CdiDBSyncMaster', 'cdi');
+								CdiDBSync::install();
+							}
+						}
+						break;
+				}
+			} else {
+				if(!CdiUtil::isCdiSlave()) {
+					Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
+					CdiSlave::install();
+				}
+			}
+
+			// backup-enabled
+			if(isset($_POST['settings']['cdi']['backup-enabled'])) {
+				Symphony::Configuration()->set('backup-enabled', 'yes', 'cdi');
+			} else {
+				Symphony::Configuration()->set('backup-enabled', 'no', 'cdi');
+			}
+
+			// backup-overwrite
+			if(isset($_POST['settings']['cdi']['backup-overwrite'])) {
+				Symphony::Configuration()->set('backup-overwrite', 'yes', 'cdi');
+			} else {
+				Symphony::Configuration()->set('backup-overwrite', 'no', 'cdi');
+			}
+
+			// manual-backup-overwrite
+			if(isset($_POST['settings']['cdi']['manual-backup-overwrite'])) {
+				Symphony::Configuration()->set('manual-backup-overwrite', 'yes', 'cdi');
+			} else {
+				Symphony::Configuration()->set('manual-backup-overwrite', 'no', 'cdi');
+			}
+			
+			// restore-enabled
+			if(isset($_POST['settings']['cdi']['restore-enabled'])) {
+				Symphony::Configuration()->set('restore-enabled', 'yes', 'cdi');
+			} else {
+				Symphony::Configuration()->set('restore-enabled', 'no', 'cdi');
+			}
+
+			// maintenance-enabled
+			if(isset($_POST['settings']['cdi']['maintenance-enabled'])) {
+				Symphony::Configuration()->set('maintenance-enabled', 'yes', 'cdi');
+			} else {
+				Symphony::Configuration()->set('maintenance-enabled', 'no', 'cdi');
+			}
+			
+			// save configuration
+			Administration::instance()->saveConfig();			
+		}
+		
 		public static function appendCdiMode() {
 			$div = new XMLElement('div', NULL);
 			$div->appendChild(new XMLElement('h3','Continuous Integration Mode',array('style' => 'margin-bottom: 5px;')));
@@ -146,79 +230,6 @@
 			$section->appendChild($main);			
 			$section->appendChild($footer);
 			return $section;
-		}
-		
-		public static function save() {
-			// CDI & Instance Mode
-			if(isset($_POST['settings']['cdi']['cdi-mode'])){
-				switch($_POST['settings']['cdi']['cdi-mode']) {
-					case "cdi":
-						//TODO: when switching between CDI modes, if you go from DBSync to CDI
-						//it will default to CdiMaster because the 'is-slave' variable is not set
-						//this is an unwanted side-effect of this generic implementation because the default should be CdiSlave.
-						
-						// Instance Mode
-						if(isset($_POST['settings']['cdi']['is-slave'])){
-							Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
-							CdiSlave::install();
-						} else {
-							Symphony::Configuration()->set('mode', 'CdiMaster', 'cdi');
-							CdiMaster::install();
-						}			
-						break;
-						
-					case "db_sync":
-						// Instance Mode
-						if(isset($_POST['settings']['cdi']['is-slave'])) {
-							Symphony::Configuration()->set('mode', 'CdiDBSyncSlave', 'cdi');							
-						} else {
-							Symphony::Configuration()->set('mode', 'CdiDBSyncMaster', 'cdi');
-						}
-						CdiDBSync::install();
-						break;
-				}
-			} else {
-				Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
-				CdiSlave::install();
-			}
-
-			// backup-enabled
-			if(isset($_POST['settings']['cdi']['backup-enabled'])) {
-				Symphony::Configuration()->set('backup-enabled', 'yes', 'cdi');
-			} else {
-				Symphony::Configuration()->set('backup-enabled', 'no', 'cdi');
-			}
-
-			// backup-overwrite
-			if(isset($_POST['settings']['cdi']['backup-overwrite'])) {
-				Symphony::Configuration()->set('backup-overwrite', 'yes', 'cdi');
-			} else {
-				Symphony::Configuration()->set('backup-overwrite', 'no', 'cdi');
-			}
-
-			// manual-backup-overwrite
-			if(isset($_POST['settings']['cdi']['manual-backup-overwrite'])) {
-				Symphony::Configuration()->set('manual-backup-overwrite', 'yes', 'cdi');
-			} else {
-				Symphony::Configuration()->set('manual-backup-overwrite', 'no', 'cdi');
-			}
-			
-			// restore-enabled
-			if(isset($_POST['settings']['cdi']['restore-enabled'])) {
-				Symphony::Configuration()->set('restore-enabled', 'yes', 'cdi');
-			} else {
-				Symphony::Configuration()->set('restore-enabled', 'no', 'cdi');
-			}
-
-			// maintenance-enabled
-			if(isset($_POST['settings']['cdi']['maintenance-enabled'])) {
-				Symphony::Configuration()->set('maintenance-enabled', 'yes', 'cdi');
-			} else {
-				Symphony::Configuration()->set('maintenance-enabled', 'no', 'cdi');
-			}
-			
-			// save configuration
-			Administration::instance()->saveConfig();			
 		}
 		
 		/*-------------------------------------------------------------------------
