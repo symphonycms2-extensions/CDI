@@ -88,7 +88,9 @@
 				
 				$filename = $_POST["ref"];
 				if(file_exists(CDI_BACKUP_ROOT . '/' . $filename)) {
-					$restore->import(file_get_contents(CDI_BACKUP_ROOT . '/' . $filename));
+					$data = file_get_contents(CDI_BACKUP_ROOT . '/' . $filename);
+					$data = str_replace('tbl_', Symphony::Configuration()->get('tbl_prefix', 'database'), $data);
+					$restore->import($data);
 				} else {
 					throw new Exception("The provided restore file '" . $filename . "' could not be found.");
 				}
