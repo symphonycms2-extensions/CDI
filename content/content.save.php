@@ -15,7 +15,7 @@
 	   	$result["message"] = "You can only execute actions from within Symphony and when the CDI extension is enabled";
 	} 
 	
-	// Clean the database and log files when the cd_clear action is called
+	// Clean the database and log files when the cdi_clear action is called
 	if(isset($_POST["action"]["cdi_clear"])) {
 		try {
 			if(CdiUtil::isCdiMaster()) {
@@ -34,7 +34,19 @@
 		}
 		$result["status"] = 'success';
 	}
-		
+
+	// Clean the database backup list when cdi_clear_restore action is called
+	else if(isset($_POST["action"]["cdi_clear_restore"])) {
+		try {
+			CdiDumpDB::uninstall();
+			CdiDumpDB::install();
+		} catch(Exception $e) {
+			$result["status"] = "error";
+			$result["message"] = $e->getMessage();
+		}
+		$result["status"] = 'success';
+	}
+	
 	// CDI Export
 	else if(isset($_POST["action"]["cdi_export"])) {
 		try {

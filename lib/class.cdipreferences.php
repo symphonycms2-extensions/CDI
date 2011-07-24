@@ -56,8 +56,16 @@
 					$footer->appendChild(self::appendClearLog());
 				}
 			} else {
-				$footer->appendChild(self::appendCdiMasterQueries());
-				$footer->appendChild(self::appendClearLog());
+				if(CdiUtil::hasRequiredDumpDBVersion()) {
+					$header->appendChild(self::appendCdiMasterQueries());
+					$leftColumn->appendChild(self::appendClearLog());
+					$rightColumn->appendChild(self::appendDBExport());
+					$footer->appendChild(self::appendRestore());
+				} else {
+					$header->appendChild(self::appendCdiMasterQueries());
+					$leftColumn->appendChild(self::appendClearLog());
+					$rightColumn->appendChild(self::appendRestore());
+				}
 			}
 				
 			// Add sections to preference group
@@ -80,28 +88,53 @@
 			$footer = new XMLElement('div',null);
 			
 				if(CdiUtil::isCdiDBSyncMaster()) {
-					$header->appendChild(self::appendInstanceMode());
-					if(file_exists(CDI_DB_SYNC_FILE)) {
-						$header->appendChild(self::appendClearLog());
-					}
-					if(CdiUtil::hasRequiredDumpDBVersion()) {
-						$leftColumn->appendChild(self::appendDBExport());
-					}
-					$rightColumn->appendChild(self::appendRestore());
-				} else if(CdiUtil::isCdiDBSyncSlave()) {
-					$leftColumn->appendChild(self::appendDBSyncImport());
-					$leftColumn->appendChild(self::appendDBSyncImportFile());
-					
-					if(CdiUtil::hasRequiredDumpDBVersion()) {
-						$leftColumn->appendChild(self::appendDBExport());
-					}					
-					if(file_exists(CDI_DB_SYNC_FILE)) {
+					if(file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+						$header->appendChild(self::appendInstanceMode());
 						$leftColumn->appendChild(self::appendClearLog());
+						$leftColumn->appendChild(self::appendDBExport());
+						$rightColumn->appendChild(self::appendRestore());
+					} else if(file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+						//TODO: move InstanceMode to leftColumn after Clear action
+						$header->appendChild(self::appendInstanceMode());
+						$leftColumn->appendChild(self::appendClearLog());
+						$rightColumn->appendChild(self::appendDumpDB());
+					} else if(!file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+						$header->appendChild(self::appendInstanceMode());
+						$leftColumn->appendChild(self::appendDBExport());
+						$rightColumn->appendChild(self::appendRestore());
+					} else if(!file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+						$leftColumn->appendChild(self::appendInstanceMode());
+						$rightColumn->appendChild(self::appendDumpDB());
 					}
-					
-					$rightColumn->appendChild(self::appendInstanceMode());
-					$rightColumn->appendChild(self::appendDumpDB());
-					$rightColumn->appendChild(self::appendRestore());
+				} else if(CdiUtil::isCdiDBSyncSlave()) {
+					if(file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+						//TODO: move Restore to footer after Clear action
+						$leftColumn->appendChild(self::appendInstanceMode());
+						$leftColumn->appendChild(self::appendDBSyncImport());
+						$leftColumn->appendChild(self::appendDBSyncImportFile());
+						$leftColumn->appendChild(self::appendClearLog());
+						$rightColumn->appendChild(self::appendDumpDB());
+						$rightColumn->appendChild(self::appendDBExport());
+						$rightColumn->appendChild(self::appendRestore());
+					} else if(file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+						$header->appendChild(self::appendInstanceMode());
+						$leftColumn->appendChild(self::appendDBSyncImport());
+						$leftColumn->appendChild(self::appendDBSyncImportFile());
+						$leftColumn->appendChild(self::appendClearLog());
+						$rightColumn->appendChild(self::appendDumpDB());
+					} else if(!file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+						$leftColumn->appendChild(self::appendInstanceMode());
+						$leftColumn->appendChild(self::appendDBSyncImport());
+						$leftColumn->appendChild(self::appendDBSyncImportFile());
+						$rightColumn->appendChild(self::appendDumpDB());
+						$rightColumn->appendChild(self::appendDBExport());
+						$footer->appendChild(self::appendRestore());
+					} else if(!file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+						$header->appendChild(self::appendInstanceMode());
+						$leftColumn->appendChild(self::appendDBSyncImport());
+						$leftColumn->appendChild(self::appendDBSyncImportFile());
+						$rightColumn->appendChild(self::appendDumpDB());
+					}
 				}
 
 			// Add sections to preference group
@@ -285,7 +318,7 @@
 			$div = new XMLElement('div', NULL,array('style'=>'margin-bottom: 1.5em;','class' => 'cdiRestore'));
 			if(CdiUtil::hasRequiredDumpDBVersion()) {
 				$div->appendChild(new XMLElement('h3','Restore Symphony database',array('style' => 'margin: 5px 0;')));
-				$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0'));
+				$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0', 'style' => 'margin-bottom: 10px;'));
 				$files = CdiDumpDB::getBackupFiles();
 				if(count($files) > 0) {
 					rsort($files);
@@ -301,12 +334,21 @@
 						$table->appendChild($tr);
 						$entryCount++;
 					}
-				} else {
-					$tr = new XMLElement('tr',null);
-					$tr->appendChild(new XMLElement('td','There is no recent Symphony database to restore'));
-					$table->appendChild($tr);
 				}
+				$tr = new XMLElement('tr',null,array('class' => 'cdiNoLastBackupCell'));
+				$tr->appendChild(new XMLElement('td','There is no recent Symphony database to restore'));
+				if($entryCount != 0) { $tr->setAttribute('style','display: none'); }
+				$table->appendChild($tr);
 				$div->appendChild($table);
+				
+				if($entryCount != 0) {
+					$button = new XMLElement('div',NULL,array('style' => 'margin: 0 0 10px 10px;'));
+					$button->appendChild(new XMLElement('input', null, array('value' => 'Clear', 'name' => 'action[cdi_clear_restore]', 'type' => 'button', 'class' => 'cdi_clear_restore_action')));
+					$button->appendChild(new XMLElement('span','&nbsp;Press "Clear" to remove all Symphony database backups'));
+					$div->appendChild($button);
+				}
+				
+				$div->appendChild(new XMLElement('p', 'Restoring a backup of your Symphony database will replace the entire structure and data of this instance. You can use this to synchronize instances, but be carefull to prevent data loss.', array('class' => 'help')));
 			}
 			return $div;
 		}
@@ -411,7 +453,18 @@
 			$button->appendChild(new XMLElement('input',null,array('value' => 'Export', 'name' => 'action[cdi_export]', 'type' => 'button', 'class' => 'cdi_export_action')));
 			$button->appendChild(new XMLElement('span','&nbsp;Press "Export" to create a full backup of the Symphony Database.'));
 			$div->appendChild($button);
-			$div->appendChild(new XMLElement('p', 'You can use the export to synchronise your databases between environments. Be advised: this will also copy all data. If your production environment has user-generated content you need to be carefull for data loss.', array('class' => 'help')));
+
+			
+			$label = Widget::Label();
+			$label->setAttribute('style','margin: -12px 0 12px 62px;position:relative;padding-left:18px;');
+			$input = Widget::Input('settings[cdi][backup-overwrite]', 'yes', 'checkbox');
+			$input->setAttribute('style','position:absolute;left:0px;');
+			$input->setAttribute('class','backup-overwrite');
+			$input->setAttribute('checked', 'checked');
+			$label->setValue($input->generate() . ' Overwrite existing backup file');
+			$div->appendChild($label);
+			
+			$div->appendChild(new XMLElement('p', 'You can use the export to synchronise your databases between environments. Be advised: this will copy all data. If your production environment has user-generated content you need to be carefull for data loss.', array('class' => 'help')));
 			return $div;
 		}
 
