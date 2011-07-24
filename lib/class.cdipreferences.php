@@ -13,7 +13,7 @@
 			Public static functions
 		-------------------------------------------------------------------------*/	
 		
-			public static function save() {
+		public static function save() {
 			// CDI & Instance Mode
 			if(isset($_POST['settings']['cdi']['cdi-mode'])){
 				switch($_POST['settings']['cdi']['cdi-mode']) {
