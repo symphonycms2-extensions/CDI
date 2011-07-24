@@ -116,7 +116,7 @@
 							echo "ERROR: " . $e->getMessage() , ". Rollback & Restore have been executed.";
 						} else {
 							if(Symphony::Configuration()->get('maintenance-enabled', 'cdi') == 'yes') {
-								echo "ERROR: " . $r->getMessage() , ". Rollback has been executed. This instance is now in maintenance mode and needs immediate attention!";
+								echo "ERROR: " . $e->getMessage() , ". Rollback has been executed. This instance is now in maintenance mode and needs immediate attention!";
 							} else {
 								echo "ERROR: " . $e->getMessage() , ". Rollback has been executed.";
 							}
