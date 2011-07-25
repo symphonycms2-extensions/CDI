@@ -245,7 +245,7 @@
 		-------------------------------------------------------------------------*/	
 				
 		public static function appendInstanceMode() {
-			$div = new XMLElement('div', NULL);
+			$div = new XMLElement('div', NULL, array('class' => 'instanceMode'));
 			$div->appendChild(new XMLElement('h3','Instance Mode',array('style' => 'margin: 5px 0;')));
 			$label = Widget::Label();
 			$label->setAttribute('style','position:relative;padding-left:18px;');

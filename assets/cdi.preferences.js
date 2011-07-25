@@ -114,7 +114,7 @@ if(!window.Symphony) { var Symphony = {}; }
 		reshuffle: function(oElm) {
 			oElm = jQuery(oElm);
 			
-			var cdiNode = oElm.closest('div.cdi');
+			var cdiNode = oElm.closest('div.cdi, div.db_sync');
 			var cdiMode =   (cdiNode.hasClass('CdiMaster') ? 'CdiMaster' : 
 							(cdiNode.hasClass('CdiSlave') ? 'CdiSlave' : 
 							(cdiNode.hasClass('DBSyncMaster') ? 'DBSyncMaster' :
@@ -128,6 +128,10 @@ if(!window.Symphony) { var Symphony = {}; }
 						var oRestore = jQuery(cdiNode).find('.cdiRestore');
 						oExport.before(oRestore);
 						oElm.replaceWith(oExport);
+						break;
+					case 'DBSyncMaster':
+						var oInstance = jQuery(cdiNode).find('.instanceMode');
+						oElm.replaceWith(oInstance);
 						break;
 				}
 			}
