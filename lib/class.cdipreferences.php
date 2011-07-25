@@ -153,7 +153,11 @@
 			}
 				
 			// Add sections to preference group
-			$section = new XMLElement('div',null,array('class' => 'cdi'));
+			$cdiMode =  (CdiUtil::isCdiMaster() ? "CdiMaster" : 
+						(CdiUtil::isCdiSlave() ? "CdiSlave" :
+						(CdiUtil::isCdiDBSyncMaster() ? "DBSyncMaster" :
+						(CdiUtil::isCdiDBSyncSlave() ? "DbSyncSlave" : "unknown"))));
+			$section = new XMLElement('div',null,array('class' => 'cdi ' . $cdiMode));
 				
 			$section->appendChild($header);
 			$main->appendChild($leftColumn);
@@ -222,7 +226,11 @@
 				}
 
 			// Add sections to preference group
-			$section = new XMLElement('div',null,array('class' => 'db_sync'));
+			$cdiMode =  (CdiUtil::isCdiMaster() ? "CdiMaster" : 
+						(CdiUtil::isCdiSlave() ? "CdiSlave" :
+						(CdiUtil::isCdiDBSyncMaster() ? "DBSyncMaster" :
+						(CdiUtil::isCdiDBSyncSlave() ? "DbSyncSlave" : "unknown"))));
+			$section = new XMLElement('div',null,array('class' => 'db_sync ' . $cdiMode));
 				
 			$section->appendChild($header);
 			$main->appendChild($leftColumn);
@@ -347,7 +355,7 @@
 						$tr->appendChild(new XMLElement('td',date('d-m-Y H:i:s', (int)$filename[0]),array('width' => '150', 'style' => 'vertical-align:middle;')));
 						$tr->appendChild(new XMLElement('td',$filename[1],array('style' => 'vertical-align:middle;')));
 						$td = new XMLElement('td',null,array('width' => '75'));
-						$button = new XMLElement('input',null, array('value' => 'Restore', 'name' => 'action[cdi_restore]', 'type' => 'button', 'class' => 'restore_action', 'ref' => $file));
+						$button = new XMLElement('input',null, array('value' => 'Restore', 'name' => 'action[cdi_restore]', 'type' => 'button', 'class' => 'cdi_restore_action', 'ref' => $file));
 						$td->appendChild($button);
 						$tr->appendChild($td);
 						$table->appendChild($tr);
@@ -466,7 +474,7 @@
 		}
 		
 		public static function appendDBExport() {
-			$div = new XMLElement('div', NULL);
+			$div = new XMLElement('div', NULL, array('class' => 'cdiExport'));
 			$div->appendChild(new XMLElement('h3','Export current Symphony database',array('style' => 'margin-bottom: 5px;')));
 			$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
 			$button->appendChild(new XMLElement('input',null,array('value' => 'Export', 'name' => 'action[cdi_export]', 'type' => 'button', 'class' => 'cdi_export_action')));

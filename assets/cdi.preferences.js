@@ -72,7 +72,7 @@ if(!window.Symphony) { var Symphony = {}; }
 									jQuery('.cdiImportFile').fadeIn('slow');
 	
 									// Remove the clear option
-									jQuery(this).detach();
+									Symphony.cdiExtension.reshuffle(this);
 								});
 								break;
 								
@@ -108,6 +108,28 @@ if(!window.Symphony) { var Symphony = {}; }
 						}
 					}
 				});
+			}
+		},
+		
+		reshuffle: function(oElm) {
+			oElm = jQuery(oElm);
+			
+			var cdiNode = oElm.closest('div.cdi');
+			var cdiMode =   (cdiNode.hasClass('CdiMaster') ? 'CdiMaster' : 
+							(cdiNode.hasClass('CdiSlave') ? 'CdiSlave' : 
+							(cdiNode.hasClass('DBSyncMaster') ? 'DBSyncMaster' :
+							(cdiNode.hasClass('DBSyncSlave') ? 'DBSyncSlave' : 'unknown'))));
+			
+			if(oElm.hasClass('cdiClear')) {
+			
+				switch(cdiMode) {
+					case 'CdiMaster': 
+						var oExport = jQuery(cdiNode).find('.cdiExport');
+						var oRestore = jQuery(cdiNode).find('.cdiRestore');
+						oExport.before(oRestore);
+						oElm.replaceWith(oExport);
+						break;
+				}
 			}
 		}
 	}
