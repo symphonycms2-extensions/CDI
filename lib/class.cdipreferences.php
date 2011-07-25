@@ -115,11 +115,11 @@
 
 		
 		public static function appendCdiPreferences() {
-			$header = new XMLElement('div',null);
+			$header = new XMLElement('div',null, array('class' => 'cdiHeader'));
 			$main = new XMLElement('div',null,array('class' => 'group'));
 			$leftColumn = new XMLElement('div',null);
 			$rightColumn = new XMLElement('div',null);
-			$footer = new XMLElement('div',null);
+			$footer = new XMLElement('div',null, array('class' => 'cdiFooter'));
 			
 			//Instance mode & Backup and restore
 			if(CdiUtil::isCdiMaster()) {
@@ -169,12 +169,12 @@
 
 		
 		public static function appendDBSyncPreferences() {
-			$header = new XMLElement('div',null);
+			$header = new XMLElement('div',null, array('class' => 'cdiHeader'));
 			$main = new XMLElement('div',null,array('class' => 'group'));
 			$leftColumn = new XMLElement('div',null);
 			$rightColumn = new XMLElement('div',null);
-			$footer = new XMLElement('div',null);
-			
+			$footer = new XMLElement('div',null, array('class' => 'cdiFooter'));
+						
 				if(CdiUtil::isCdiDBSyncMaster()) {
 					if(file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
 						$header->appendChild(self::appendInstanceMode());
@@ -182,7 +182,6 @@
 						$leftColumn->appendChild(self::appendDBExport());
 						$rightColumn->appendChild(self::appendRestore());
 					} else if(file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
-						//TODO: move InstanceMode to leftColumn after Clear action
 						$header->appendChild(self::appendInstanceMode());
 						$leftColumn->appendChild(self::appendClearLog());
 						$rightColumn->appendChild(self::appendDumpDB());
@@ -196,7 +195,6 @@
 					}
 				} else if(CdiUtil::isCdiDBSyncSlave()) {
 					if(file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
-						//TODO: move Restore to footer after Clear action
 						$leftColumn->appendChild(self::appendInstanceMode());
 						$leftColumn->appendChild(self::appendDBSyncImport());
 						$leftColumn->appendChild(self::appendDBSyncImportFile());
@@ -229,7 +227,7 @@
 			$cdiMode =  (CdiUtil::isCdiMaster() ? "CdiMaster" : 
 						(CdiUtil::isCdiSlave() ? "CdiSlave" :
 						(CdiUtil::isCdiDBSyncMaster() ? "DBSyncMaster" :
-						(CdiUtil::isCdiDBSyncSlave() ? "DbSyncSlave" : "unknown"))));
+						(CdiUtil::isCdiDBSyncSlave() ? "DBSyncSlave" : "unknown"))));
 			$section = new XMLElement('div',null,array('class' => 'db_sync ' . $cdiMode));
 				
 			$section->appendChild($header);

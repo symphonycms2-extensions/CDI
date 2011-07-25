@@ -133,6 +133,12 @@ if(!window.Symphony) { var Symphony = {}; }
 						var oInstance = jQuery(cdiNode).find('.instanceMode');
 						oElm.replaceWith(oInstance);
 						break;
+					case 'DBSyncSlave':
+						var oRestore = jQuery(cdiNode).find('.cdiRestore');
+						var oFooter = jQuery(cdiNode).find('.cdiFooter');
+						oFooter.append(oRestore);
+						oElm.detach();
+						break;
 				}
 			}
 		}
