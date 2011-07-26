@@ -54,7 +54,7 @@ if(!window.Symphony) { var Symphony = {}; }
 				oElm.form.submit(); 
 			} else {
 				var sData = oElm.name + '=true&ref=' + oElm.getAttribute('ref');
-				jQuery.post(Symphony.WEBSITE + '/symphony/extension/cdi/actions/',sData, function(data) {
+				jQuery.post(Symphony.Context.get('root') + '/symphony/extension/cdi/actions/',sData, function(data) {
 					if(data.status == 'success') {
 						switch(sAction) {
 							case 'action[cdi_clear]':
