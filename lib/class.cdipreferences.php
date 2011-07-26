@@ -347,7 +347,7 @@
 				if(count($files) > 0) {
 					rsort($files);
 					foreach($files as $file) {
-						$filename = split('-',$file);
+						$filename = explode('-',$file);
 						if($entryCount == 5) { break; }
 						$tr = new XMLElement('tr',null);
 						$tr->appendChild(new XMLElement('td',date('d-m-Y H:i:s', (int)$filename[0]),array('width' => '150', 'style' => 'vertical-align:middle;')));

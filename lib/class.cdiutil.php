@@ -12,6 +12,13 @@
 			return (Symphony::Configuration()->get('enabled', 'cdi') == 'yes');
 		}
 		
+		public static function isLoggerInstalled() {
+			if(file_exists(TOOLKIT . '/class.mysql.php')) {
+				$contents = @file_get_contents(TOOLKIT . '/class.mysql.php');
+				return preg_match("/CdiLogQuery::log/i", $contents);
+			}
+		}
+		
 		public static function isCdi() {
 			return (self::isCdiMaster() || self::isCdiSlave());
 		}

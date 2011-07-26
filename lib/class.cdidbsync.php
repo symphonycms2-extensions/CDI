@@ -53,7 +53,7 @@
 			try {
 				if(file_exists($syncFile)) {
 					$contents = file_get_contents($syncFile);
-					$queries = split(';',$contents);
+					$queries = explode(';',$contents);
 					foreach($queries as $query) {
 						$query = trim($query);
 						// ommit comments and empty statements

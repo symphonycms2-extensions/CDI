@@ -18,7 +18,8 @@
 		public static function log($query) {
 			// Prevent execution on the frontend and check configuration conditions
 			// Do not log the query when CDI is disabled, in SLAVE mode or busy executing queries.
-			if((!class_exists('Administration')) || !CdiUtil::isEnabled() || self::$isUpdating) {
+			// Additionally if the logger is not installed, you should not be able to call this function
+			if((!class_exists('Administration')) || !CdiUtil::isEnabled() || self::$isUpdating || !CdiUtil::isLoggerInstalled()) {
 				return true;
 			}
 			

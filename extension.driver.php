@@ -19,15 +19,20 @@
 		}
 		
 		public function install() {
-			CdiSlave::install();
-			if(CdiUtil::hasRequiredDumpDBVersion()) {
-				CdiDumpDB::install();
+			if(!CdiUtil::isLoggerInstalled()) {
+       			Administration::instance()->Page->pageAlert("You need to add 'CdiLogQuery::log()' to <em>class.mysql.php</em> to enable the CDI extension. See README for more information.");
+				return false;
+			} else {
+				CdiSlave::install();
+				if(CdiUtil::hasRequiredDumpDBVersion()) {
+					CdiDumpDB::install();
+				}
+	
+				Symphony::Configuration()->set('enabled', 'yes', 'cdi');
+				Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
+				Administration::instance()->saveConfig();
+				return true;
 			}
-
-			Symphony::Configuration()->set('enabled', 'yes', 'cdi');
-			Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
-			Administration::instance()->saveConfig();
-			return true;
 		}
 		
 		public function uninstall() {
@@ -93,11 +98,17 @@
 			$group->setAttribute('class', 'cdi settings');
 			$group->appendChild(new XMLElement('legend', 'Continuous Database Integration'));
 
-			$group->appendChild(CdiPreferences::appendCdiMode());
-			if(CdiUtil::isCdi()) {
-				$group->appendChild(CdiPreferences::appendCdiPreferences());
-			} else if(CdiUtil::isCdiDBSync()) {
-				$group->appendChild(CdiPreferences::appendDBSyncPreferences());
+			if(CdiUtil::isLoggerInstalled()) {
+				$group->appendChild(CdiPreferences::appendCdiMode());
+				if(CdiUtil::isCdi()) {
+					$group->appendChild(CdiPreferences::appendCdiPreferences());
+				} else if(CdiUtil::isCdiDBSync()) {
+					$group->appendChild(CdiPreferences::appendDBSyncPreferences());
+				}
+			} else {
+       			Administration::instance()->Page->pageAlert("You need to add 'CdiLogQuery::log()' to <em>class.mysql.php</em> to enable the CDI extension. See README for more information.");
+				$group->appendChild(new XMLElement('p', 'The CDI extension is currently disabled because it seems that you have not added a reference to the "CdiLogQuery::log()" function in your Symphony MySQL class.
+														 Installation instructions can be found in the <em>README</em> and <em>class.mysql.php.txt</em> file that can be found in the extension directory.'));
 			}
 
 			// Append preferences
