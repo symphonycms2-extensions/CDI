@@ -130,9 +130,9 @@ if(!window.Symphony) { var Symphony = {}; }
 						oElm.replaceWith(oExport);
 						break;
 					case 'DBSyncMaster':
-						//var oInstance = jQuery(cdiNode).find('.instanceMode');
-						//oElm.replaceWith(oInstance);
-						//break;
+						var oInstance = jQuery(cdiNode).find('.instanceMode');
+						oElm.replaceWith(oInstance);
+						break;
 					case 'DBSyncSlave':
 						var oRestore = jQuery(cdiNode).find('.cdiRestore');
 						var oFooter = jQuery(cdiNode).find('.cdiFooter');
