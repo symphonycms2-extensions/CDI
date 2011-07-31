@@ -106,6 +106,34 @@
 		}
 		
 		/**
+		 * Forces download of the selected backup file
+		 */
+		public static function download() {
+			// We should only allow download of the database from the administration interface when the extension is enabled.
+			if((!class_exists('Administration'))  || !CdiUtil::isEnabled()) {
+			   	throw new Exception("You can only restore the Symphony database from the Preferences page");
+			}
+			
+			$filename = $_REQUEST["ref"];
+			$file = CDI_BACKUP_ROOT . '/' . $filename;
+			if(file_exists($file)) {
+				$data = file_get_contents($file);
+
+				header("Pragma: public");
+				header("Expires: 0");
+				header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+	
+				header("Content-Type: application/octet-stream");
+				header("Content-Transfer-Encoding: binary");
+				header("Content-Disposition: attachment; filename=" . $filename);
+				echo $data;
+				die();
+			} else {
+				throw new Exception("The provided backup file '" . $file . "' could not be found.");
+			}
+		}
+		
+		/**
 		 * Returns the database backup files from the Manifest folder
 		 */
 		public static function getBackupFiles() {

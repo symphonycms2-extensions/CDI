@@ -350,7 +350,8 @@
 						$filename = explode('-',$file);
 						if($entryCount == 5) { break; }
 						$tr = new XMLElement('tr',null);
-						$tr->appendChild(new XMLElement('td',date('d-m-Y H:i:s', (int)$filename[0]),array('width' => '150', 'style' => 'vertical-align:middle;')));
+						$linkbutton = new XMLElement('a',date('d-m-Y H:i:s', (int)$filename[0]),array('href' => URL . '/symphony/extension/cdi/download/?ref=' . $file));
+						$tr->appendChild(new XMLElement('td',$linkbutton->generate(),array('width' => '150', 'style' => 'vertical-align:middle;')));
 						$tr->appendChild(new XMLElement('td',$filename[1],array('style' => 'vertical-align:middle;')));
 						$td = new XMLElement('td',null,array('width' => '75'));
 						$button = new XMLElement('input',null, array('value' => 'Restore', 'name' => 'action[cdi_restore]', 'type' => 'button', 'class' => 'cdi_restore_action', 'ref' => $file));
