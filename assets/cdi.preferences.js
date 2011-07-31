@@ -78,6 +78,9 @@ if(!window.Symphony) { var Symphony = {}; }
 								
 							case 'action[cdi_clear_restore]':
 								jQuery(oElm).closest('div').fadeOut("slow",function() {
+									var oRestoreUpload = jQuery('.cdiRestoreUpload');
+									oRestoreUpload.removeAttr('style');
+
 									var oTable = jQuery('.cdiRestore > table');
 									var oEmptyTableCell = jQuery('.cdiRestore .cdiNoLastBackupCell');
 									oEmptyTableCell.removeAttr('style');

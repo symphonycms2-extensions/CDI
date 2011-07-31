@@ -56,7 +56,7 @@
 				   ($mode == 'manual' && Symphony::Configuration()->get('manual-backup-overwrite', 'cdi') == 'yes')) {
 					self::uninstall();
 				}
-				$filename = sprintf(CDI_BACKUP_FILE, time() . '-' . $mode . '-');
+				$filename = self::getFileName($mode);
 				file_put_contents($filename,$sql);
 				
 				// Re-enable CdiLogQuery::log() to persist queries
@@ -86,9 +86,14 @@
 				// Adjust to only support FULL database dump
 				$restore = new MySQLRestore(Symphony::Database());
 				
-				$filename = $_POST["ref"];
-				if(file_exists(CDI_BACKUP_ROOT . '/' . $filename)) {
-					$data = file_get_contents(CDI_BACKUP_ROOT . '/' . $filename);
+				$filename = CDI_BACKUP_ROOT . '/' . $_POST["ref"];
+				if(isset($_FILES['dumpdb_restore_file'])) {
+					$filename = self::getFileName('manual');
+					rename($_FILES['dumpdb_restore_file']['tmp_name'],$filename);
+				}
+				
+				if(file_exists($filename)) {
+					$data = file_get_contents($filename);
 					$data = str_replace('tbl_', Symphony::Configuration()->get('tbl_prefix', 'database'), $data);
 					$restore->import($data);
 				} else {
@@ -117,6 +122,10 @@
 				sort($files);
 			}
 			return $files;
+		}
+		
+		private static function getFileName($mode) {
+			return sprintf(CDI_BACKUP_FILE,time() . '-' . $mode . '-');
 		}
 	}
 ?>

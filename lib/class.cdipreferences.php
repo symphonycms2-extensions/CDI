@@ -365,6 +365,19 @@
 				if($entryCount != 0) { $tr->setAttribute('style','display: none'); }
 				$table->appendChild($tr);
 				$div->appendChild($table);
+
+				$uploadContainer = new XMLElement('div',null,array('class' => 'cdiRestoreUpload'));
+				if($entryCount != 0) { $uploadContainer->setAttribute('style','display: none'); }
+				Administration::instance()->Page->Form->setAttribute('enctype', 'multipart/form-data');
+				$span = new XMLElement('span',NULL,array('class' => 'frame'));
+				$span->appendChild(new XMLElement('input',NULL,array('name' => 'dumpdb_restore_file', 'type' => 'file')));
+				$uploadContainer->appendChild($span);
+				
+				$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
+				$button->appendChild(new XMLElement('input',null,array('value' => 'Upload', 'name' => 'action[dumpdb_restore]', 'type' => 'submit', 'class' => 'cdi_import_action')));
+				$button->appendChild(new XMLElement('span','&nbsp;Press "Upload" to restore the Symphony Database.'));
+				$uploadContainer->appendChild($button);
+				$div->appendChild($uploadContainer);
 				
 				if($entryCount != 0) {
 					$button = new XMLElement('div',NULL,array('style' => 'margin: 0 0 10px 10px;'));

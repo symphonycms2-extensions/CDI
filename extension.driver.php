@@ -91,7 +91,10 @@
 			// The import action is the only left to require a post-back because AJAX file upload is cumbersome
 			if(isset($_POST["action"]["cdi_import"])) {
 				CdiDBSync::import();
+			} else if(isset($_POST["action"]["dumpdb_restore"])) {
+				CdiDumpDB::restore();
 			}
+			
 			
 			// Create the Preferences user-interface for the CDI extension
 			$group = new XMLElement('fieldset');
