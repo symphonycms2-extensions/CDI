@@ -1,8 +1,8 @@
 # Continuous Database Integration
 
-* Version: 0.4.0
+* Version: 1.0.0
 * Author: Remie Bolte <http://github.com/remie>
-* Build Date: 2011-07-24
+* Build Date: 2011-07-31
 * Requirements: Symphony 2.2.1, requires a small modification to class.mysql.php (see below)
 
 Special thanks go out to Nick Dunn <http://github.com/nickdunn/> and Richard Warrender <http://github.com/rwarrender>. 
@@ -31,17 +31,28 @@ to create a backup of your data in production, and only run the upgrade in maint
 
 ## Roadmap
 
-* Small UI bug fixes (see TODO notations in project files)
+The release milestones are listed on GitHub: <https://github.com/remie/CDI/issues/milestones>
 
-* Implement a rolling file appending strategy to prevent the aggregated SQL files from becoming to large
-
-* Add support for DATA changes from the backend
-
-* Add support for DATA changes from the front-end
-
-* Add support for active replication (for load-balancing)
+A list of all open issues can be found here: <https://github.com/remie/CDI/issues>
 
 ## Version History
+
+### 1.0.0
+* Add warning to preferences screen for updating class.mysql.php
+
+* Implement loading indicators for AJAX requests
+
+* Move InstanceMode to leftColumn after Clear action
+
+* Move Restore to footer after Clear action
+
+* Move export to footer after Clear action
+
+* Add download button for backups
+
+* Add download button for CDI / DBSync file
+
+* Symphony.WEBSITE is deprecated
 
 ### 0.4.0
 * Added automatic backup of current database before executing CDI queries using https://github.com/nils-werner/dump_db
