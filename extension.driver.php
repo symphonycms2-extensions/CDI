@@ -83,6 +83,7 @@
 		}
 		
 		public function initaliseAdminPageHead($context) {
+			Administration::instance()->Page->addStylesheetToHead(URL . '/extensions/cdi/assets/cdi.css',null,10);
 			Administration::instance()->Page->addScriptToHead(URL . '/extensions/cdi/assets/cdi.preferences.js',4598); // I like random numbers
 		}
 
@@ -100,7 +101,9 @@
 			$group = new XMLElement('fieldset');
 			$group->setAttribute('class', 'cdi settings');
 			$group->appendChild(new XMLElement('legend', 'Continuous Database Integration'));
-
+			$group->appendChild(new XMLElement('div', '<span class="image">&#160;</span><span>Processing... please wait.</span>', array('class' => 'help cdiLoading cdiHidden')));
+			Administration::instance()->Page->Form->setAttribute('enctype', 'multipart/form-data');
+			
 			if(CdiUtil::isLoggerInstalled()) {
 				$group->appendChild(CdiPreferences::appendCdiMode());
 				if(CdiUtil::isCdi()) {

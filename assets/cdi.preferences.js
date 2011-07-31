@@ -53,8 +53,11 @@ if(!window.Symphony) { var Symphony = {}; }
 			if(sAction == 'action[cdi_import]') { 
 				oElm.form.submit(); 
 			} else {
+				jQuery('.cdiLoading').removeClass('cdiHidden');
+				
 				var sData = oElm.name + '=true&ref=' + oElm.getAttribute('ref');
 				jQuery.post(Symphony.Context.get('root') + '/symphony/extension/cdi/actions/',sData, function(data) {
+					// TODO: implement error handling for AJAX requests
 					if(data.status == 'success') {
 						switch(sAction) {
 							case 'action[cdi_clear]':
@@ -73,6 +76,7 @@ if(!window.Symphony) { var Symphony = {}; }
 	
 									// Remove the clear option
 									Symphony.cdiExtension.reshuffle(this);
+									jQuery('.cdiLoading').addClass('cdiHidden');
 								});
 								break;
 								
@@ -89,6 +93,7 @@ if(!window.Symphony) { var Symphony = {}; }
 									oTable.append(oEmptyTableCell);
 									
 									jQuery(this).detach();
+									jQuery('.cdiLoading').addClass('cdiHidden');
 								});
 								break;
 								
@@ -99,12 +104,14 @@ if(!window.Symphony) { var Symphony = {}; }
 									jQuery('.cdiRestore').find('input').click(function(event) {
 										Symphony.cdiExtension.processAction(this,event);
 									});
+									jQuery('.cdiLoading').addClass('cdiHidden');
 								});
 								break;
 								
 							case 'action[cdi_restore]':
 								jQuery(oElm).fadeOut('slow',function() {
 									jQuery(this).replaceWith('<span style="color: green;">Restored</span>');
+									jQuery('.cdiLoading').addClass('cdiHidden');
 								});
 								break;
 

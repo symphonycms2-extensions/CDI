@@ -1,0 +1,13 @@
+
+.cdiHidden {
+	display: none;
+}
+
+.cdiLoading .image {
+	background: url("icn-loading.gif") no-repeat scroll 50% 50% #FFFFFF;	
+	width: 16px;
+	height: 16px;
+	padding-left: 15px;	
+	margin-right: 2px;
+}
+

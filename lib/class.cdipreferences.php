@@ -248,10 +248,6 @@
 			return $section;
 		}
 		
-		/*-------------------------------------------------------------------------
-			Private static static functions
-		-------------------------------------------------------------------------*/	
-				
 		public static function appendInstanceMode() {
 			$div = new XMLElement('div', NULL, array('class' => 'instanceMode'));
 			$div->appendChild(new XMLElement('h3','Instance Mode',array('style' => 'margin: 5px 0;')));
@@ -379,7 +375,6 @@
 
 				$uploadContainer = new XMLElement('div',null,array('class' => 'cdiRestoreUpload'));
 				if($entryCount != 0) { $uploadContainer->setAttribute('style','display: none'); }
-				Administration::instance()->Page->Form->setAttribute('enctype', 'multipart/form-data');
 				$span = new XMLElement('span',NULL,array('class' => 'frame'));
 				$span->appendChild(new XMLElement('input',NULL,array('name' => 'dumpdb_restore_file', 'type' => 'file')));
 				$uploadContainer->appendChild($span);
@@ -479,7 +474,6 @@
 			$div = new XMLElement('div', NULL,array('class' => 'cdiImportFile'));
 			$div->appendChild(new XMLElement('h3','Import SQL Statements',array('style' => 'margin-bottom: 5px;')));
 
-			Administration::instance()->Page->Form->setAttribute('enctype', 'multipart/form-data');
 			$span = new XMLElement('span',NULL,array('class' => 'frame'));
 			$span->appendChild(new XMLElement('input',NULL,array('name' => 'cdi_import_file', 'type' => 'file')));
 			$div->appendChild($span);
