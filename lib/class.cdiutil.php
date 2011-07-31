@@ -1,8 +1,10 @@
 <?php
 
 	define('CDIROOT',MANIFEST . '/cdi',false);
-	define('CDI_FILE', CDIROOT . '/cdi.sql');
-	define('CDI_DB_SYNC_FILE', CDIROOT . '/db_sync.sql');
+	define('CDI_FILENAME','cdi.sql');
+	define('CDI_FILE', CDIROOT . '/' . CDI_FILENAME);
+	define('CDI_DB_SYNC_FILENAME', 'db_sync.sql');
+	define('CDI_DB_SYNC_FILE', CDIROOT . '/' . CDI_DB_SYNC_FILENAME);
 	define('CDI_BACKUP_ROOT', CDIROOT . '/export');
 	define('CDI_BACKUP_FILE', CDI_BACKUP_ROOT . '/%scdi-db-backup.sql');
 
@@ -50,15 +52,15 @@
 		}
 		
 		public static function hasDumpDBInstalled() {
-			return file_exists(EXTENSIONS . '/dump_db/extension.driver.php');
+			$status = Symphony::ExtensionManager()->fetchStatus("dump_db");
+			return ($status == EXTENSION_ENABLED);
 		}
 		
 		public static function hasRequiredDumpDBVersion() {
 			if(self::hasDumpDBInstalled()) {
-				require_once(EXTENSIONS . '/dump_db/extension.driver.php');
-				$about = extension_dump_db::about();
-				return ($about["version"] == "1.08");
-			} else { 
+				$version = Symphony::ExtensionManager()->fetchInstalledVersion("dump_db");
+				return ($version == "1.08");
+			} else {
 				return false; 
 			}
 		}

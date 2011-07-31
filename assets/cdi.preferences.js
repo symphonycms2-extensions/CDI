@@ -127,15 +127,23 @@ if(!window.Symphony) { var Symphony = {}; }
 			
 				switch(cdiMode) {
 					case 'CdiMaster': 
+						jQuery(cdiNode).find('.cdiDownload').detach();
 						var oExport = jQuery(cdiNode).find('.cdiExport');
 						var oRestore = jQuery(cdiNode).find('.cdiRestore');
 						oExport.before(oRestore);
 						oElm.replaceWith(oExport);
 						break;
 					case 'DBSyncMaster':
+						jQuery(cdiNode).find('.cdiDownload').detach();
 						var oInstance = jQuery(cdiNode).find('.instanceMode');
 						oElm.replaceWith(oInstance);
+						
+						var oRestore = jQuery(cdiNode).find('.cdiRestore');
+						var oFooter = jQuery(cdiNode).find('.cdiFooter');
+						oFooter.append(oRestore);
+						
 						break;
+					case 'CdiSlave':
 					case 'DBSyncSlave':
 						var oRestore = jQuery(cdiNode).find('.cdiRestore');
 						var oFooter = jQuery(cdiNode).find('.cdiFooter');

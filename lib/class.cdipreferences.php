@@ -112,7 +112,6 @@
 			$div->appendChild(new XMLElement('p', 'You need to save your changes before you can configure this mode, or reload the page to cancel. <br />Be advised: changing CDI mode will reset any mode specific configuration settings.', array('class' => 'cdiModeRestart', 'style' => 'display:none;')));
 			return $div;
 		}
-
 		
 		public static function appendCdiPreferences() {
 			$header = new XMLElement('div',null, array('class' => 'cdiHeader'));
@@ -121,34 +120,44 @@
 			$rightColumn = new XMLElement('div',null);
 			$footer = new XMLElement('div',null, array('class' => 'cdiFooter'));
 			
-			//Instance mode & Backup and restore
 			if(CdiUtil::isCdiMaster()) {
 				$header->appendChild(self::appendInstanceMode());
-			} else {
-				$leftColumn->appendChild(self::appendInstanceMode());
-				$rightColumn->appendChild(self::appendDumpDB());
-				$rightColumn->appendChild(self::appendRestore());
-			}
-			
-			// CDI logs
-			if(CdiUtil::isCdiSlave()) {
-				if(CdiUtil::hasRequiredDumpDBVersion()) {
-					$leftColumn->appendChild(self::appendCdiSlaveQueries());
-					$leftColumn->appendChild(self::appendClearLog());
-				} else {
-					$footer->appendChild(self::appendCdiSlaveQueries());
-					$footer->appendChild(self::appendClearLog());
-				}
-			} else {
-				if(CdiUtil::hasRequiredDumpDBVersion()) {
-					$header->appendChild(self::appendCdiMasterQueries());
+				$header->appendChild(self::appendCdiMasterQueries());
+				
+				if(file_exists(CDI_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+					$leftColumn->appendChild(self::appendDownloadLog());
 					$leftColumn->appendChild(self::appendClearLog());
 					$rightColumn->appendChild(self::appendDBExport());
-					$footer->appendChild(self::appendRestore());
-				} else {
-					$header->appendChild(self::appendCdiMasterQueries());
-					$leftColumn->appendChild(self::appendClearLog());
 					$rightColumn->appendChild(self::appendRestore());
+				} else if(!file_exists(CDI_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+					$leftColumn->appendChild(self::appendDBExport());
+					$rightColumn->appendChild(self::appendRestore());
+				} else if(file_exists(CDI_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+					$leftColumn->appendChild(self::appendDownloadLog());
+					$leftColumn->appendChild(self::appendClearLog());
+					$rightColumn->appendChild(self::appendDBExport());
+					$rightColumn->appendChild(self::appendRestore());
+				} else if(!file_exists(CDI_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+					$header->appendChild(self::appendDBExport());
+				}
+			} else if(CdiUtil::isCdiSlave()) {
+				$leftColumn->appendChild(self::appendInstanceMode());
+				$rightColumn->appendChild(self::appendDumpDB());
+
+				if(file_exists(CDI_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+					$leftColumn->appendChild(self::appendCdiSlaveQueries());
+					$leftColumn->appendChild(self::appendClearLog());
+					$rightColumn->appendChild(self::appendDBExport());
+					$rightColumn->appendChild(self::appendRestore());
+				} else if(file_exists(CDI_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+					$footer->appendChild(self::appendCdiSlaveQueries());
+					$footer->appendChild(self::appendClearLog());
+				} else if(!file_exists(CDI_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+					$leftColumn->appendChild(self::appendCdiSlaveQueries());
+					$rightColumn->appendChild(self::appendDBExport());
+					$footer->appendChild(self::appendRestore());
+				} else if(!file_exists(CDI_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+					$footer->appendChild(self::appendCdiSlaveQueries());
 				}
 			}
 				
@@ -178,17 +187,18 @@
 				if(CdiUtil::isCdiDBSyncMaster()) {
 					if(file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
 						$header->appendChild(self::appendInstanceMode());
+						$leftColumn->appendChild(self::appendDownloadLog());
 						$leftColumn->appendChild(self::appendClearLog());
-						$leftColumn->appendChild(self::appendDBExport());
+						$rightColumn->appendChild(self::appendDBExport());
 						$rightColumn->appendChild(self::appendRestore());
 					} else if(file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
 						$header->appendChild(self::appendInstanceMode());
 						$leftColumn->appendChild(self::appendClearLog());
 						$rightColumn->appendChild(self::appendDumpDB());
 					} else if(!file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
-						$header->appendChild(self::appendInstanceMode());
-						$leftColumn->appendChild(self::appendDBExport());
-						$rightColumn->appendChild(self::appendRestore());
+						$leftColumn->appendChild(self::appendInstanceMode());
+						$rightColumn->appendChild(self::appendDBExport());
+						$footer->appendChild(self::appendRestore());
 					} else if(!file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
 						$leftColumn->appendChild(self::appendInstanceMode());
 						$rightColumn->appendChild(self::appendDumpDB());
@@ -279,7 +289,7 @@
 			if(!CdiUtil::hasDumpDBInstalled()) {
 				$div->appendChild(new XMLElement('p', 'To enable backup and restore you need to install the <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> extension (version 1.08)'));
 			} else if(!CdiUtil::hasRequiredDumpDBVersion()) {
-				$div->appendChild(new XMLElement('p', 'Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> (' . $version . ') is not supported. Please switch to version 1.08.'));
+				$div->appendChild(new XMLElement('p', 'Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> is not supported. Please switch to version 1.08.'));
 			} else {
 				// Enable automatic backups
 				$label = Widget::Label();
@@ -456,7 +466,7 @@
 			$input = Widget::Input('settings[cdi][deleteSyncFile]', 'yes', 'checkbox');
 			$input->setAttribute('style','position:absolute;left:0px;');
 			$input->setAttribute('checked', 'checked');
-			$label->setValue($input->generate() . ' Remove <em>db_sync.sql</em> after a succesful import');
+			$label->setValue($input->generate() . ' Remove <em>' . CDI_DB_SYNC_FILENAME . '</em> after a succesful import');
 			$div->appendChild($label);
 			
 			$div->appendChild(new XMLElement('p', 'All SQL statements in the Database Synchroniser file will be executed on this Symphony instance. When all statements have been succesfully imported the file will be deleted.', array('class' => 'help')));
@@ -488,27 +498,52 @@
 		public static function appendDBExport() {
 			$div = new XMLElement('div', NULL, array('class' => 'cdiExport'));
 			$div->appendChild(new XMLElement('h3','Export current Symphony database',array('style' => 'margin-bottom: 5px;')));
-			$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
-			$button->appendChild(new XMLElement('input',null,array('value' => 'Export', 'name' => 'action[cdi_export]', 'type' => 'button', 'class' => 'cdi_export_action')));
-			$button->appendChild(new XMLElement('span','&nbsp;Press "Export" to create a full backup of the Symphony Database.'));
-			$div->appendChild($button);
-
-			
-			$label = Widget::Label();
-			$label->setAttribute('style','margin: -12px 0 12px 62px;position:relative;padding-left:18px;');
-			$input = Widget::Input('settings[cdi][manual-backup-overwrite]', 'yes', 'checkbox');
-			$input->setAttribute('style','position:absolute;left:0px;');
-			$input->setAttribute('class','manual-backup-overwrite');
-			if(Symphony::Configuration()->get('manual-backup-overwrite', 'cdi') == 'yes') { 
-				$input->setAttribute('checked', 'checked'); 
+			if(!CdiUtil::hasDumpDBInstalled()) {
+				$div->appendChild(new XMLElement('p', 'To enable database export functionality you need to install the <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> extension (version 1.08)'));
+			} else if(!CdiUtil::hasRequiredDumpDBVersion()) {
+				$div->appendChild(new XMLElement('p', 'Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> is not supported. Please switch to version 1.08.'));
+			} else {
+				$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
+				$button->appendChild(new XMLElement('input',null,array('value' => 'Export', 'name' => 'action[cdi_export]', 'type' => 'button', 'class' => 'cdi_export_action')));
+				$button->appendChild(new XMLElement('span','&nbsp;Press "Export" to create a full backup of the Symphony Database.'));
+				$div->appendChild($button);
+	
+				
+				$label = Widget::Label();
+				$label->setAttribute('style','margin: -12px 0 12px 62px;position:relative;padding-left:18px;');
+				$input = Widget::Input('settings[cdi][manual-backup-overwrite]', 'yes', 'checkbox');
+				$input->setAttribute('style','position:absolute;left:0px;');
+				$input->setAttribute('class','manual-backup-overwrite');
+				if(Symphony::Configuration()->get('manual-backup-overwrite', 'cdi') == 'yes') { 
+					$input->setAttribute('checked', 'checked'); 
+				}
+				$label->setValue($input->generate() . ' Overwrite existing backup file');
+				$div->appendChild($label);
+				
+				$div->appendChild(new XMLElement('p', 'You can use the export to synchronise your databases between environments. Be advised: this will copy all data. If your production environment has user-generated content you need to be carefull for data loss.', array('class' => 'help')));
 			}
-			$label->setValue($input->generate() . ' Overwrite existing backup file');
-			$div->appendChild($label);
-			
-			$div->appendChild(new XMLElement('p', 'You can use the export to synchronise your databases between environments. Be advised: this will copy all data. If your production environment has user-generated content you need to be carefull for data loss.', array('class' => 'help')));
 			return $div;
 		}
 
+		public static function appendDownloadLog() {
+			$div = new XMLElement('div',NULL,array('class' => 'cdiDownload'));
+			$div->appendChild(new XMLElement('h3','Download Log Entries',array('style' => 'margin-bottom: 5px;')));
+			$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
+			if(CdiUtil::isCdi()) {
+				$linkbutton = new XMLElement('a','Download',array('href' => URL . '/symphony/extension/cdi/download/?ref=' . CDI_FILENAME));
+				$button->appendChild(new XMLElement('span','&nbsp;Press ' . $linkbutton->generate() . ' to retrieve a local copy of the CDI log entries'));
+				$div->appendChild($button);
+				$div->appendChild(new XMLElement('p', 'You can use the "Download" button to retrieve a local copy of the CDI log file. This allows you to manually upload the CDI logs to a Slave instance.', array('class' => 'help')));
+			} else {
+				$linkbutton = new XMLElement('a','Download',array('href' => URL . '/symphony/extension/cdi/download/?ref=' . CDI_DB_SYNC_FILENAME));
+				$button->appendChild(new XMLElement('span','&nbsp;Press ' . $linkbutton->generate() . ' to retrieve a local copy of <em>' . CDI_DB_SYNC_FILENAME . '</em>'));
+				$div->appendChild($button);
+				$div->appendChild(new XMLElement('p', 'You can use the "Download" button to retrieve a local copy of the current <em>' . CDI_DB_SYNC_FILENAME . '</em> file. 
+													   Upload the file to your slave instances to synchronize the Symphony database.', array('class' => 'help')));
+			}
+			return $div;
+		}
+		
 		public static function appendClearLog() {
 			$div = new XMLElement('div',NULL,array('class' => 'cdiClear'));
 			$div->appendChild(new XMLElement('h3','Clear Log Entries',array('style' => 'margin-bottom: 5px;')));
@@ -521,11 +556,11 @@
 														 Ensure that all your Symphony have been updated either by CDI (check the last executed queries list above) or by manually restoring the same database backup on all instances.
 														 Make sure that you clear the log files on every instance (including the "Master" instance). It is important that the database schemas are synchronized before starting with a clean sheet.', array('class' => 'help')));
 			} else {
-				$button->appendChild(new XMLElement('span','&nbsp;Press "Clear" to remove <em>db_sync.sql</em> from disk'));
+				$button->appendChild(new XMLElement('span','&nbsp;Press "Clear" to remove <em>' . CDI_DB_SYNC_FILENAME . '</em> from disk'));
 				$div->appendChild($button);
-				$div->appendChild(new XMLElement('p', 'You can use the "Clear" button to remove current <em>db_sync.sql</em> file. 
+				$div->appendChild(new XMLElement('p', 'You can use the "Clear" button to remove current <em>' . CDI_DB_SYNC_FILENAME . '</em> file. 
 													   Ensure that all your Symphony have been updated either by CDI or by manually restoring the same database backup on all instances.
-													   Make sure that you clear the <em>db_sync.sql</em> files on every instance (including the "Master" instance). It is important that the database schemas are synchronized before starting with a clean sheet.', array('class' => 'help')));
+													   Make sure that you clear the <em>' . CDI_DB_SYNC_FILENAME . '</em> files on every instance (including the "Master" instance). It is important that the database schemas are synchronized before starting with a clean sheet.', array('class' => 'help')));
 			}
 			return $div;
 		}		

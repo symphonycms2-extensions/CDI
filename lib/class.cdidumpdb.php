@@ -29,7 +29,6 @@
 			if(!CdiUtil::hasRequiredDumpDBVersion()) {
 				throw new Exception('Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> is not supported. Please switch to version 1.08.');
 			} else {
-				require_once(EXTENSIONS . '/dump_db/extension.driver.php');
 				require_once(EXTENSIONS . '/dump_db/lib/class.mysqldump.php');
 				
 				// Prevent the CdiLogQuery::log() from persisting queries that are executed by CDI itself
@@ -76,7 +75,6 @@
 			if(!CdiUtil::hasRequiredDumpDBVersion()) {
 				throw new Exception('Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> is not supported. Please switch to version 1.08.');
 			} else {
-				require_once(EXTENSIONS . '/dump_db/extension.driver.php');
 				require_once(EXTENSIONS . '/dump_db/lib/class.mysqlrestore.php');
 				
 				// Prevent the CdiLogQuery::log() from persisting queries that are executed by CDI itself
@@ -102,34 +100,6 @@
 				
 				// Re-enable CdiLogQuery::log() to persist queries
 				CdiLogQuery::isUpdating(false);
-			}
-		}
-		
-		/**
-		 * Forces download of the selected backup file
-		 */
-		public static function download() {
-			// We should only allow download of the database from the administration interface when the extension is enabled.
-			if((!class_exists('Administration'))  || !CdiUtil::isEnabled()) {
-			   	throw new Exception("You can only restore the Symphony database from the Preferences page");
-			}
-			
-			$filename = $_REQUEST["ref"];
-			$file = CDI_BACKUP_ROOT . '/' . $filename;
-			if(file_exists($file)) {
-				$data = file_get_contents($file);
-
-				header("Pragma: public");
-				header("Expires: 0");
-				header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-	
-				header("Content-Type: application/octet-stream");
-				header("Content-Transfer-Encoding: binary");
-				header("Content-Disposition: attachment; filename=" . $filename);
-				echo $data;
-				die();
-			} else {
-				throw new Exception("The provided backup file '" . $file . "' could not be found.");
 			}
 		}
 		

@@ -83,7 +83,7 @@
 		}
 		
 		public function initaliseAdminPageHead($context) {
-			Administration::instance()->Page->addScriptToHead(URL . '/extensions/cdi/assets/cdi.preferences.js');
+			Administration::instance()->Page->addScriptToHead(URL . '/extensions/cdi/assets/cdi.preferences.js',4598); // I like random numbers
 		}
 
 		public function appendPreferences($context){
