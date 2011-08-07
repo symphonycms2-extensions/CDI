@@ -1,7 +1,8 @@
 <?php
 
 	require_once(EXTENSIONS . '/cdi/lib/class.cdiutil.php');
-
+	require_once(EXTENSIONS . '/cdi/lib/class.cdilogquery.php');
+	
 	class CdiDBSync {
 		private static $meta_written;
 		

@@ -1,5 +1,8 @@
 <?php
 
+	require_once(EXTENSIONS . '/cdi/lib/class.cdiutil.php');
+	require_once(EXTENSIONS . '/cdi/lib/class.cdilogquery.php');
+	
 	class CdiMaster {
 
 		private static $lastEntryTS;

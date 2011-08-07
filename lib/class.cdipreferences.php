@@ -18,49 +18,57 @@
 			if(isset($_POST['settings']['cdi']['cdi-mode'])){
 				switch($_POST['settings']['cdi']['cdi-mode']) {
 					case "cdi":
-						//TODO: when switching between CDI modes, if you go from DBSync to CDI
-						//it will default to CdiMaster because the 'is-slave' variable is not set
-						//this is an unwanted side-effect of this generic implementation because the default should be CdiSlave.
-						
-						// Instance Mode
-						if(isset($_POST['settings']['cdi']['is-slave'])){
-							if(!CdiUtil::isCdiSlave()) {
-								Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
-								Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
-								CdiSlave::install();
-							}
-							
-							if(isset($_POST['settings']['cdi']['disable_blueprints'])) {
-								Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
-							} else {
-								Symphony::Configuration()->set('disable_blueprints', 'no', 'cdi');
-							}
+						// Switching from DBSync to CDI, default to Slave
+						if(!CdiUtil::isCdi()) {
+							Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
+							Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
+							CdiSlave::install();
 						} else {
-							if(!CdiUtil::isCdiMaster()) {
-								Symphony::Configuration()->set('mode', 'CdiMaster', 'cdi');
-								CdiMaster::install();
+							// Check Instance Mode
+							if(isset($_POST['settings']['cdi']['is-slave'])){
+								if(!CdiUtil::isCdiSlave()) {
+									Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
+									Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
+									CdiSlave::install();
+								} else {
+									if(isset($_POST['settings']['cdi']['disable_blueprints'])) {
+										Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
+									} else {
+										Symphony::Configuration()->set('disable_blueprints', 'no', 'cdi');
+									}
+								}
+							} else {
+								if(!CdiUtil::isCdiMaster()) {
+									Symphony::Configuration()->set('mode', 'CdiMaster', 'cdi');
+									CdiMaster::install();
+								}
 							}
 						}
 						break;
 						
 					case "db_sync":
-						// Instance Mode
-						if(isset($_POST['settings']['cdi']['is-slave'])) {
-							if(!CdiUtil::isCdiDBSyncSlave()) {
-								Symphony::Configuration()->set('mode', 'CdiDBSyncSlave', 'cdi');							
-								Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
-								CdiDBSync::install();
-							}
-							
-							if(isset($_POST['settings']['cdi']['disable_blueprints'])) {
-								Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
-							} else {
-								Symphony::Configuration()->set('disable_blueprints', 'no', 'cdi');
-							}
+						// Switching from CDI to DBSync, default to Slave
+						if(!CdiUtil::isCdiDBSync()) {
+							CdiDBSync::install();
 						} else {
-							if(!CdiUtil::isCdiDBSyncMaster()) {
-								Symphony::Configuration()->set('mode', 'CdiDBSyncMaster', 'cdi');
-								CdiDBSync::install();
+							// Check Instance Mode
+							if(isset($_POST['settings']['cdi']['is-slave'])) {
+								if(!CdiUtil::isCdiDBSyncSlave()) {
+									Symphony::Configuration()->set('mode', 'CdiDBSyncSlave', 'cdi');							
+									Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
+									CdiDBSync::install();
+								} else {
+									if(isset($_POST['settings']['cdi']['disable_blueprints'])) {
+										Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
+									} else {
+										Symphony::Configuration()->set('disable_blueprints', 'no', 'cdi');
+									}
+								}
+							} else {
+								if(!CdiUtil::isCdiDBSyncMaster()) {
+									Symphony::Configuration()->set('mode', 'CdiDBSyncMaster', 'cdi');
+									CdiDBSync::install();
+								}
 							}
 						}
 						break;

@@ -1,6 +1,8 @@
 <?php
 	
 	require_once(EXTENSIONS . '/cdi/lib/class.cdiutil.php');
+	require_once(EXTENSIONS . '/cdi/lib/class.cdimaster.php');
+	require_once(EXTENSIONS . '/cdi/lib/class.cdidbsync.php');
 
 	class CdiLogQuery {
 		private static $isUpdating;
@@ -70,7 +72,7 @@
 					Symphony::Database()->query("DELETE FROM `tbl_cdi_log` WHERE `query_hash` LIKE '" . $hash . "'");
 				} else if(CdiUtil::isCdiMaster()) {
 					// On the MASTER instance we need to remove the persisted SQL Statement from disk (if it exists)
-					$entries = CdiLogQuery::getCdiLogEntries();
+					$entries = self::getCdiLogEntries();
 					unset($entries[$hash]);
 					file_put_contents(CDI_FILE, json_encode($entries));
 				} else {
