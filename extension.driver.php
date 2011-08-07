@@ -1,5 +1,6 @@
 <?php
 
+	require_once(EXTENSIONS . '/cdi/lib/class.cdiutil.php');
 	require_once(EXTENSIONS . '/cdi/lib/class.cdipreferences.php');
 	require_once(EXTENSIONS . '/cdi/lib/class.cdilogquery.php');
 	
@@ -59,6 +60,11 @@
 					'callback'	=> 'initaliseAdminPageHead'
 				),
 				array(
+					'page'		=> '/backend/',
+					'delegate'	=> 'NavigationPreRender',
+					'callback'	=> 'NavigationPreRender'
+				),
+				array(
 					'page' => '/system/preferences/',
 					'delegate' => 'AddCustomPreferenceFieldsets',
 					'callback' => 'appendPreferences'
@@ -85,6 +91,12 @@
 		public function initaliseAdminPageHead($context) {
 			Administration::instance()->Page->addStylesheetToHead(URL . '/extensions/cdi/assets/cdi.css',null,10);
 			Administration::instance()->Page->addScriptToHead(URL . '/extensions/cdi/assets/cdi.preferences.js',4598); // I like random numbers
+		}
+		
+		public function NavigationPreRender($context) {
+			if(CdiUtil::hasDisabledBlueprints()) {
+				unset($context["navigation"][BLUEPRINTS_INDEX]);
+			}
 		}
 
 		public function appendPreferences($context){

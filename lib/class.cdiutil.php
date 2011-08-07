@@ -1,5 +1,6 @@
 <?php
 
+	define('BLUEPRINTS_INDEX',100,false);
 	define('CDIROOT',MANIFEST . '/cdi',false);
 	define('CDI_FILENAME','cdi.sql');
 	define('CDI_FILE', CDIROOT . '/' . CDI_FILENAME);
@@ -63,6 +64,10 @@
 			} else {
 				return false; 
 			}
+		}
+		
+		public static function hasDisabledBlueprints() {
+			return (Symphony::Configuration()->get('disable_blueprints', 'cdi') == 'yes');
 		}
 
 		/**

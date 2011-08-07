@@ -26,7 +26,14 @@
 						if(isset($_POST['settings']['cdi']['is-slave'])){
 							if(!CdiUtil::isCdiSlave()) {
 								Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
+								Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
 								CdiSlave::install();
+							}
+							
+							if(isset($_POST['settings']['cdi']['disable_blueprints'])) {
+								Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
+							} else {
+								Symphony::Configuration()->set('disable_blueprints', 'no', 'cdi');
 							}
 						} else {
 							if(!CdiUtil::isCdiMaster()) {
@@ -41,7 +48,14 @@
 						if(isset($_POST['settings']['cdi']['is-slave'])) {
 							if(!CdiUtil::isCdiDBSyncSlave()) {
 								Symphony::Configuration()->set('mode', 'CdiDBSyncSlave', 'cdi');							
+								Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
 								CdiDBSync::install();
+							}
+							
+							if(isset($_POST['settings']['cdi']['disable_blueprints'])) {
+								Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
+							} else {
+								Symphony::Configuration()->set('disable_blueprints', 'no', 'cdi');
 							}
 						} else {
 							if(!CdiUtil::isCdiDBSyncMaster()) {
@@ -252,7 +266,11 @@
 			$div = new XMLElement('div', NULL, array('class' => 'instanceMode'));
 			$div->appendChild(new XMLElement('h3','Instance Mode',array('style' => 'margin: 5px 0;')));
 			$label = Widget::Label();
-			$label->setAttribute('style','position:relative;padding-left:18px;');
+			if(!CdiUtil::isCdiSlave() && !CdiUtil::isCdiDBSyncSlave()) {
+				$label->setAttribute('style','position:relative;padding-left:18px;');
+			} else {
+				$label->setAttribute('style','margin-bottom: 2px;position:relative;padding-left:18px;');
+			}
 			$input = Widget::Input('settings[cdi][is-slave]', 'yes', 'checkbox');
 			$input->setAttribute('style','position:absolute;left:0px;');
 			$input->setAttribute('class','instance-mode');
@@ -265,6 +283,18 @@
 				$label->setValue($input->generate() . ' This can only be a "Slave" instance due to insufficient write permissions.');
 			}
 			$div->appendChild($label);
+			if(CdiUtil::isCdiSlave() || CdiUtil::isCdiDBSyncSlave())
+			{
+				$label = Widget::Label();
+				$label->setAttribute('style','position:relative;padding-left:18px;');
+				$input = Widget::Input('settings[cdi][disable_blueprints]', 'yes', 'checkbox');
+				$input->setAttribute('style','position:absolute;left:0px;');
+				if(CdiUtil::hasDisabledBlueprints()) {
+					$input->setAttribute('checked', 'checked');
+				}
+				$label->setValue($input->generate() . ' Disable structural changes on this instance.');
+				$div->appendChild($label);
+			}
 			if(CdiUtil::isCdiMaster() || CdiUtil::isCdiSlave()) {
 				$div->appendChild(new XMLElement('p', 'The extension is designed to allow automatic propagation of structural changes between environments in a DTAP setup.
 													   It is imperitive that you have a single "Master" instance (usually your development environment). This is important because the auto-increment values need to be exactly the same on each database table in every environment. 
