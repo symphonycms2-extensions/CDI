@@ -9,8 +9,8 @@
 		public function about() {
 			return array(
 				'name'			=> 'Continuous Database Integration',
-				'version'		=> '0.4.0',
-				'release-date'	=> '2011-07-24',
+				'version'		=> '1.0.1',
+				'release-date'	=> '2011-08-07',
 				'author'		=> array(
 					'name'			=> 'Remie Bolte, Nick Dunn, Richard Warrender',
 					'email'			=> 'r.bolte@gmail.com'

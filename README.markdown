@@ -1,8 +1,8 @@
 # Continuous Database Integration
 
-* Version: 1.0.0
+* Version: 1.0.1
 * Author: Remie Bolte <http://github.com/remie>
-* Build Date: 2011-07-31
+* Build Date: 2011-08-07
 * Requirements: Symphony 2.2.1, requires a small modification to class.mysql.php (see below)
 
 Special thanks go out to Nick Dunn <http://github.com/nickdunn/> and Richard Warrender <http://github.com/rwarrender>. 
@@ -36,6 +36,14 @@ The release milestones are listed on GitHub: <https://github.com/remie/CDI/issue
 A list of all open issues can be found here: <https://github.com/remie/CDI/issues>
 
 ## Version History
+
+### 1.0.1
+
+* Issue #23: Incompatibility with anti_brute_force extension
+
+* Issue #5: Switching CDI modes should stick with defaults
+
+* Issue #19: Add option to disable back-end navigation items for slave instances
 
 ### 1.0.0
 * Add warning to preferences screen for updating class.mysql.php
