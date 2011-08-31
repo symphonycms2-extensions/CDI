@@ -11,13 +11,29 @@
 			self::$isUpdating = $status;
 		}
 		
+		public static function persistQueries() {
+			// Prevent execution on the frontend and check configuration conditions
+			// Do not log the query when CDI is disabled, in SLAVE mode or busy executing queries.
+			// Additionally if the logger is not installed, you should not be able to call this function
+			if((!class_exists('Administration')) || !CdiUtil::isEnabled() || self::$isUpdating || !CdiUtil::isLoggerInstalled()) {
+				return true;
+			}
+			
+			$queryLog = Symphony::Database()->fetch("SELECT * FROM `tbl_query_log`");
+			foreach($queryLog as $entry) {
+				$ts = $entry["time"];
+				$query = base64_decode($entry["query_base64"]);
+				self::log($query,$ts);
+			}
+		}
+		
 		/**
 		 * The CdiQueryLog::log() function is called from the Database implementation responsible for executing Symphony SQL queries
 		 * If in MASTER mode, CDI will save the query to disk allowing it to be committed to the VCS. From there it will be available
 		 * for automatic query exection by CDI slave instances (see also CdiLogQuery::executeQueries()).
 		 * @param String $query
 		 */
-		public static function log($query) {
+		public static function log($query,$timestamp) {
 			// Prevent execution on the frontend and check configuration conditions
 			// Do not log the query when CDI is disabled, in SLAVE mode or busy executing queries.
 			// Additionally if the logger is not installed, you should not be able to call this function
@@ -46,9 +62,9 @@
 			
 			// We've come far enough... let's try to save it to disk!
 			if(CdiUtil::isCdiMaster()) {
-				return CdiMaster::persistQuery($query);
+				return CdiMaster::persistQuery($query,$timestamp);
 			} else if(CdiUtil::isCdiDBSyncMaster()) {
-				return CdiDBSync::persistQuery($query);
+				return CdiDBSync::persistQuery($query,$timestamp);
 			} else {
 				//TODO: error handling for the unusual event that we are dealing with here.
 				return true;

@@ -65,6 +65,11 @@
 					'callback'	=> 'NavigationPreRender'
 				),
 				array(
+					'page'		=> '/backend/',
+					'delegate'	=> 'AdminPagePostGenerate',
+					'callback'	=> 'AdminPagePostGenerate'
+				),
+				array(
 					'page' => '/system/preferences/',
 					'delegate' => 'AddCustomPreferenceFieldsets',
 					'callback' => 'appendPreferences'
@@ -99,6 +104,10 @@
 			}
 		}
 
+		public function AdminPagePostGenerate($context) {
+			CdiLogQuery::persistQueries();
+		}
+		
 		public function appendPreferences($context){
 			// Import the db_sync.sql file when the cdi_import action is called
 			// The import action is the only left to require a post-back because AJAX file upload is cumbersome
