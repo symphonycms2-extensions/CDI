@@ -21,7 +21,7 @@
 			// Prevent execution on the frontend and check configuration conditions
 			// Do not log the query when CDI is disabled, in SLAVE mode or busy executing queries.
 			// Additionally if the logger is not installed, you should not be able to call this function
-			if((!class_exists('Administration')) || !CdiUtil::isEnabled() || self::$isUpdating || !CdiUtil::isLoggerInstalled()) {
+			if((!class_exists('Administration')) || !CdiUtil::isEnabled() || self::$isUpdating) {
 				return true;
 			}
 			

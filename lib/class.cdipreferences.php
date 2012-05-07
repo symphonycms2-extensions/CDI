@@ -14,109 +14,78 @@
 		-------------------------------------------------------------------------*/	
 		
 		public static function save() {
-			// CDI & Instance Mode
-			if(isset($_POST['settings']['cdi']['cdi-mode'])){
-				switch($_POST['settings']['cdi']['cdi-mode']) {
-					case "cdi":
-						// Switching from DBSync to CDI, default to Slave
-						if(!CdiUtil::isCdi()) {
-							Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
-							Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
-							CdiSlave::install();
-						} else {
-							// Check Instance Mode
-							if(isset($_POST['settings']['cdi']['is-slave'])){
-								if(!CdiUtil::isCdiSlave()) {
-									Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
-									Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
-									CdiSlave::install();
-								} else {
-									if(isset($_POST['settings']['cdi']['disable_blueprints'])) {
-										Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
-									} else {
-										Symphony::Configuration()->set('disable_blueprints', 'no', 'cdi');
-									}
-								}
-							} else {
-								if(!CdiUtil::isCdiMaster()) {
-									Symphony::Configuration()->set('mode', 'CdiMaster', 'cdi');
-									CdiMaster::install();
-								}
-							}
-						}
-						break;
-						
-					case "db_sync":
-						// Switching from CDI to DBSync, default to Slave
-						if(!CdiUtil::isCdiDBSync()) {
-							CdiDBSync::install();
-						} else {
-							// Check Instance Mode
-							if(isset($_POST['settings']['cdi']['is-slave'])) {
-								if(!CdiUtil::isCdiDBSyncSlave()) {
-									Symphony::Configuration()->set('mode', 'CdiDBSyncSlave', 'cdi');							
-									Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
-									CdiDBSync::install();
-								} else {
-									if(isset($_POST['settings']['cdi']['disable_blueprints'])) {
-										Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
-									} else {
-										Symphony::Configuration()->set('disable_blueprints', 'no', 'cdi');
-									}
-								}
-							} else {
-								if(!CdiUtil::isCdiDBSyncMaster()) {
-									Symphony::Configuration()->set('mode', 'CdiDBSyncMaster', 'cdi');
-									CdiDBSync::install();
-								}
-							}
-						}
-						break;
+			try {
+				// cdi-mode
+				if(isset($_POST['settings']['cdi']['cdi-mode'])) {
+					Symphony::Configuration()->set('cdi-mode', $_POST['settings']['cdi']['cdi-mode'], 'cdi');
+				} else {
+					return false;
 				}
-			} else {
-				if(!CdiUtil::isCdiSlave()) {
-					Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
-					CdiSlave::install();
+				
+				// mode (based on is-slave)
+				if(isset($_POST['settings']['cdi']['is-slave'])) {
+					if(CdiUtil::isCdi()) {
+						Symphony::Configuration()->set('amode', 'CdiSlave', 'cdi');
+					} else {
+						Symphony::Configuration()->set('amode', 'CdiDBSyncSlave', 'cdi');
+					}
+				} else {
+					if(CdiUtil::isCdi()) {
+						Symphony::Configuration()->set('amode', 'CdiMaster', 'cdi');
+					} else {
+						Symphony::Configuration()->set('amode', 'CdiDBSyncMaster', 'cdi');
+					}
+				}		
+				
+				// disable_blueprints
+				if(isset($_POST['settings']['cdi']['disable_blueprints'])) {
+					Symphony::Configuration()->set('disable_blueprints', 'yes', 'cdi');
+				} else {
+					Symphony::Configuration()->set('disable_blueprints', 'no', 'cdi');
 				}
+	
+				// backup-enabled
+				if(isset($_POST['settings']['cdi']['backup-enabled'])) {
+					Symphony::Configuration()->set('backup-enabled', 'yes', 'cdi');
+				} else {
+					Symphony::Configuration()->set('backup-enabled', 'no', 'cdi');
+				}
+	
+				// backup-overwrite
+				if(isset($_POST['settings']['cdi']['backup-overwrite'])) {
+					Symphony::Configuration()->set('backup-overwrite', 'yes', 'cdi');
+				} else {
+					Symphony::Configuration()->set('backup-overwrite', 'no', 'cdi');
+				}
+	
+				// manual-backup-overwrite
+				if(isset($_POST['settings']['cdi']['manual-backup-overwrite'])) {
+					Symphony::Configuration()->set('manual-backup-overwrite', 'yes', 'cdi');
+				} else {
+					Symphony::Configuration()->set('manual-backup-overwrite', 'no', 'cdi');
+				}
+				
+				// restore-enabled
+				if(isset($_POST['settings']['cdi']['restore-enabled'])) {
+					Symphony::Configuration()->set('restore-enabled', 'yes', 'cdi');
+				} else {
+					Symphony::Configuration()->set('restore-enabled', 'no', 'cdi');
+				}
+	
+				// maintenance-enabled
+				if(isset($_POST['settings']['cdi']['maintenance-enabled'])) {
+					Symphony::Configuration()->set('maintenance-enabled', 'yes', 'cdi');
+				} else {
+					Symphony::Configuration()->set('maintenance-enabled', 'no', 'cdi');
+				}
+				
+				// save configuration
+				return Symphony::Configuration()->write();
+			} catch(Exception $e) {
+				Administration::instance()->Page->pageAlert(_('An error occurred while saving preferences for CDI: ') . $e->getMessage());
+				Symphony::Log()->pushToLog($e->getMessage());
+				return false;
 			}
-
-			// backup-enabled
-			if(isset($_POST['settings']['cdi']['backup-enabled'])) {
-				Symphony::Configuration()->set('backup-enabled', 'yes', 'cdi');
-			} else {
-				Symphony::Configuration()->set('backup-enabled', 'no', 'cdi');
-			}
-
-			// backup-overwrite
-			if(isset($_POST['settings']['cdi']['backup-overwrite'])) {
-				Symphony::Configuration()->set('backup-overwrite', 'yes', 'cdi');
-			} else {
-				Symphony::Configuration()->set('backup-overwrite', 'no', 'cdi');
-			}
-
-			// manual-backup-overwrite
-			if(isset($_POST['settings']['cdi']['manual-backup-overwrite'])) {
-				Symphony::Configuration()->set('manual-backup-overwrite', 'yes', 'cdi');
-			} else {
-				Symphony::Configuration()->set('manual-backup-overwrite', 'no', 'cdi');
-			}
-			
-			// restore-enabled
-			if(isset($_POST['settings']['cdi']['restore-enabled'])) {
-				Symphony::Configuration()->set('restore-enabled', 'yes', 'cdi');
-			} else {
-				Symphony::Configuration()->set('restore-enabled', 'no', 'cdi');
-			}
-
-			// maintenance-enabled
-			if(isset($_POST['settings']['cdi']['maintenance-enabled'])) {
-				Symphony::Configuration()->set('maintenance-enabled', 'yes', 'cdi');
-			} else {
-				Symphony::Configuration()->set('maintenance-enabled', 'no', 'cdi');
-			}
-			
-			// save configuration
-			Administration::instance()->saveConfig();			
 		}
 		
 		public static function appendCdiMode() {

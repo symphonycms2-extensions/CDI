@@ -75,7 +75,7 @@
 
 			// Save the last update date to configuration
 			Symphony::Configuration()->set('last-update', time(), 'cdi');
-			Administration::instance()->saveConfig();
+			Symphony::Configuration()->write();
 			
 			// Re-enable CdiLogQuery::log() to persist queries
 			CdiLogQuery::isUpdating(false);

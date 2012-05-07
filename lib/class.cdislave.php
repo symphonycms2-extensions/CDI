@@ -6,14 +6,21 @@
 	class CdiSlave {
 
 		public static function install() {
-			self::uninstall();
-			Symphony::Database()->query("CREATE TABLE IF NOT EXISTS `tbl_cdi_log` (
-				  `date` DATETIME NOT NULL,
-				  `order` int(4),
-				  `author` VARCHAR(255) NOT NULL,
-				  `url` VARCHAR(255) NOT NULL,
-				  `query_hash` VARCHAR(255) NOT NULL)");
-			if (!file_exists(CDIROOT)) { mkdir(CDIROOT); }
+			try {
+				self::uninstall();
+				Symphony::Database()->query("CREATE TABLE IF NOT EXISTS `tbl_cdi_log` (
+					  `date` DATETIME NOT NULL,
+					  `order` int(4),
+					  `author` VARCHAR(255) NOT NULL,
+					  `url` VARCHAR(255) NOT NULL,
+					  `query_hash` VARCHAR(255) NOT NULL)");
+				if (!file_exists(CDIROOT)) { mkdir(CDIROOT); }
+				return true;
+			} catch(Exception $e) {
+				Administration::instance()->Page->pageAlert(_('An error occurred while installing CDI: ') . $e->getMessage());
+				Symphony::Log()->pushToLog($e->getMessage());
+				return false;
+			}
 		}
 		
 		public static function uninstall() {
@@ -42,7 +49,7 @@
 			// Switch to maintenance mode
 			if(Symphony::Configuration()->get('maintenance-enabled', 'cdi') == 'yes') {
 				Symphony::Configuration()->set('enabled', 'yes', 'maintenance_mode');
-				Administration::instance()->saveConfig();			
+				Symphony::Configuration()->write();			
 			}
 			
 			// Implement automatic backup before processing structural changes
@@ -110,7 +117,7 @@
 							// Restore was succesful, at least we can jump out of maintenance mode
 							if(Symphony::Configuration()->get('maintenance-enabled', 'cdi') == 'yes') {
 								Symphony::Configuration()->set('enabled', 'no', 'maintenance_mode');
-								Administration::instance()->saveConfig();
+								Symphony::Configuration()->write();
 							}
 							
 							echo "ERROR: " . $e->getMessage() , ". Rollback & Restore have been executed.";
@@ -140,7 +147,7 @@
 				Symphony::Configuration()->set('enabled', 'no', 'maintenance_mode');
 			}
 			
-			Administration::instance()->saveConfig();
+			Symphony::Configuration()->write();
 			
 			// Re-enable CdiLogQuery::log() to persist queries
 			CdiLogQuery::isUpdating(false);

@@ -6,39 +6,24 @@
 	
 	Class extension_cdi extends Extension {
 
-		public function about() {
-			return array(
-				'name'			=> 'Continuous Database Integration',
-				'version'		=> '1.0.1',
-				'release-date'	=> '2011-08-07',
-				'author'		=> array(
-					'name'			=> 'Remie Bolte, Nick Dunn, Richard Warrender',
-					'email'			=> 'r.bolte@gmail.com'
-				),
-				'description'	=> 'Continuous Database Integration is designed to save and log structural changes to the database, allowing queries to be savely executed on other instances'
-			);
-		}
-		
 		public function install() {
-			if(!CdiUtil::isLoggerInstalled()) {
-       			Administration::instance()->Page->pageAlert("You need to add 'CdiLogQuery::log()' to <em>class.mysql.php</em> to enable the CDI extension. See README for more information.");
-				return false;
-			} else {
-				CdiSlave::install();
+			if(CdiSlave::install()) {
 				if(CdiUtil::hasRequiredDumpDBVersion()) {
 					CdiDumpDB::install();
 				}
-	
-				Symphony::Configuration()->set('enabled', 'yes', 'cdi');
-				Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
-				Administration::instance()->saveConfig();
-				return true;
+			} else {
+				return false;
 			}
+
+			Symphony::Configuration()->set('enabled', 'yes', 'cdi');
+			Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
+			Symphony::Configuration()->write();
+			return true;
 		}
 		
 		public function uninstall() {
 			Symphony::Configuration()->remove('cdi');
-			Administration::instance()->saveConfig();
+			Symphony::Configuration()->write();
 			
 			CdiMaster::uninstall();
 			CdiSlave::uninstall();
@@ -81,13 +66,6 @@
 			Delegated functions
 		-------------------------------------------------------------------------*/	
 
-		public function fetchNavigation() {
-			return array(
-				array('location' => 'System', 'link' => '/actions/'),
-				array('location' => 'System', 'link' => '/update/')
-			);
-		}
-		
 		public function initaliseAdminPageHead($context) {
 			Administration::instance()->Page->addStylesheetToHead(URL . '/extensions/cdi/assets/cdi.css',null,10);
 			Administration::instance()->Page->addScriptToHead(URL . '/extensions/cdi/assets/cdi.preferences.js',4598); // I like random numbers
@@ -116,17 +94,11 @@
 			$group->appendChild(new XMLElement('div', '<span class="image">&#160;</span><span>Processing... please wait.</span>', array('class' => 'help cdiLoading cdiHidden')));
 			Administration::instance()->Page->Form->setAttribute('enctype', 'multipart/form-data');
 			
-			if(CdiUtil::isLoggerInstalled()) {
-				$group->appendChild(CdiPreferences::appendCdiMode());
-				if(CdiUtil::isCdi()) {
-					$group->appendChild(CdiPreferences::appendCdiPreferences());
-				} else if(CdiUtil::isCdiDBSync()) {
-					$group->appendChild(CdiPreferences::appendDBSyncPreferences());
-				}
-			} else {
-       			Administration::instance()->Page->pageAlert("You need to add 'CdiLogQuery::log()' to <em>class.mysql.php</em> to enable the CDI extension. See README for more information.");
-				$group->appendChild(new XMLElement('p', 'The CDI extension is currently disabled because it seems that you have not added a reference to the "CdiLogQuery::log()" function in your Symphony MySQL class.
-														 Installation instructions can be found in the <em>README</em> and <em>class.mysql.php.txt</em> file that can be found in the extension directory.'));
+			$group->appendChild(CdiPreferences::appendCdiMode());
+			if(CdiUtil::isCdi()) {
+				$group->appendChild(CdiPreferences::appendCdiPreferences());
+			} else if(CdiUtil::isCdiDBSync()) {
+				$group->appendChild(CdiPreferences::appendDBSyncPreferences());
 			}
 
 			// Append preferences
@@ -134,7 +106,15 @@
 		}
 		
 		public function savePreferences($context){
-			CdiPreferences::save();
+			if(CdiPreferences::save()) {
+				// apply config changes
+				if(CdiUtil::isCdiSlave()) { CdiSlave::install(); } 
+				else if (CdiUtil::isCdiMaster()) { CdiMaster::install(); }
+				else { CdiDBSync::install(); }
+			} else {
+				Administration::instance()->Page->pageAlert(_('An unknown error occurred while saving preferences for CDI. Your changes have not been saved.'));
+				return false;
+			}
 		}
 	}
 ?>
