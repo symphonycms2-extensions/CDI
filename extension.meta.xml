@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension id="cdi" status="unreleased" xmlns="http://symphony-cms.com/schemas/extension/1.0">
+	<name>Continuous Database Integration</name>
+	<description>Continuous Database Integration is designed to save and log structural changes to the database, allowing queries to be savely executed on other instances</description>
+	<repo type="github">https://github.com/remie/CDI</repo>
+	<url type="discuss">http://symphony-cms.com/discuss/thread/73859/</url>
+	<types>
+		<type>Workflow</type>
+	</types>
+	<authors>
+		<author>
+			<name github="remie">Remie Bolte</name>
+			<website>https://github.com/remie</website>
+		</author>
+	</authors>
+	<releases>
+		<release version="1.1.0" date="2012-03-12" min="2.3">
+			- Updated to Symphony 2.3
+		</release>
+		<release version="1.0.1" date="2011-08-07" min="2.2.1">
+			- Fixing issues #5, #19 and #23
+		</release>
+		<release version="1.0.0" date="2011-07-31" min="2.2.1">
+			- First stable release
+			- Fixing issues #1, #2, #6, #7, #8, #14, #16, #17, #18
+		</release>
+	</releases>
+</extension>
