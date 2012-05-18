@@ -28,7 +28,7 @@
 				if(CdiUtil::hasRequiredDumpDBVersion()) {
 					CdiDumpDB::install();
 				}
-	
+				Symphony::Configuration()->set('api_key', $this->generateKey(), 'cdi');
 				Symphony::Configuration()->set('enabled', 'yes', 'cdi');
 				Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
 				Administration::instance()->saveConfig();
@@ -107,7 +107,11 @@
 			} else if(isset($_POST["action"]["dumpdb_restore"])) {
 				CdiDumpDB::restore();
 			}
-			
+
+			if(null == Symphony::Configuration()->get('api_key', 'cdi')){
+				Symphony::Configuration()->set('api_key', $this->generateKey(), 'cdi');
+				Administration::instance()->saveConfig();
+			}
 			
 			// Create the Preferences user-interface for the CDI extension
 			$group = new XMLElement('fieldset');
@@ -118,6 +122,20 @@
 			
 			if(CdiUtil::isLoggerInstalled()) {
 				$group->appendChild(CdiPreferences::appendCdiMode());
+				if(CdiUtil::isCdiSlave() || CdiUtil::isCdiDBSyncSlave())
+				{
+					$div = new XMLElement('div');
+					$heading = new XMLElement('h3', 'Update URL');
+					$heading->setAttribute('style','margin: 5px 0;');
+					$div->appendChild($heading);
+					$link = new XMLElement('span', URL . '/symphony/extension/cdi/update/' . Symphony::Configuration()->get('api_key','cdi'));
+					$link->setAttribute('class','frame');
+					$div->appendChild($link);
+					$help = new XMLElement('p','To get this installation in sync with your master installation, the above URL will trigger the update process. There is no extra configuration needed, so it is possible to automate the update process.');
+					$help->setAttribute('class','help');
+					$div->appendChild($help);
+					$group->appendChild($div);
+				}
 				if(CdiUtil::isCdi()) {
 					$group->appendChild(CdiPreferences::appendCdiPreferences());
 				} else if(CdiUtil::isCdiDBSync()) {
@@ -135,6 +153,10 @@
 		
 		public function savePreferences($context){
 			CdiPreferences::save();
+		}
+
+		protected function generateKey(){
+			return substr(sha1(uniqid()), 0, 10);
 		}
 	}
 ?>
