@@ -1,24 +1,22 @@
 # Continuous Database Integration
 
-* Version: 1.0.1
+* Version: 1.1.0
 * Author: Remie Bolte <http://github.com/remie>
-* Build Date: 2011-08-07
-* Requirements: Symphony 2.2.1, requires a small modification to class.mysql.php (see below)
+* Build Date: 2012-05-31
+* Requirements: Symphony 2.3
 
 Special thanks go out to Nick Dunn <http://github.com/nickdunn/> and Richard Warrender <http://github.com/rwarrender>. 
-Part of the code comes from their DB_Sync <https://github.com/nickdunn/db_sync> extension. 
+Part of the code comes from their DB_Sync <https://github.com/nickdunn/db_sync> extension.
 Future patches to their extension will be closely monitored and implemented to increase the stability of this extension.
+
+Huib Keemink <http://github.com/creativedutchmen/> helped out by adding token authentication to the update process (issue #32).
 
 ## Installation
 
 1. Download the CDI extension and upload the 'cdi' folder to the 'extensions' folder of all your Symphony instances on all your environments.
 2. Enable the extension by selecting "Continuous Database Integration" in the list and choose Enable from the with-selected menu, then click Apply.
-3. Modify the `query()` function in `symphony/lib/toolkit/class.mysql.php` adding the lines between `// Start database logger` and `// End database logger` from the `class.mysql.php.txt` file included with this extension. Place these before the start of the Profile performance logging so it doesn't interfere with performance monitoring and regular query execution.
 
 ## Warning
-
-Since this extension requires a core file modification, changes you make to the MySQL class will be lost when you upgrade Symphony. 
-Remember to add in the logging call back into `class.mysql.php` if you update Symphony!
 
 The queries are stored in a folder named `cdi` in your `/manifest` folder. This is unsecured, and therefore I strongly advise that you 
 alter you .htaccess file to prevent your webserver from exposing these files.
@@ -36,6 +34,18 @@ The release milestones are listed on GitHub: <https://github.com/remie/CDI/issue
 A list of all open issues can be found here: <https://github.com/remie/CDI/issues>
 
 ## Version History
+
+### 1.1.0
+
+* Issue #32: Implement authentication for CDI update on slave
+
+* Issue #31: Symphony 2.3 compatibility
+
+* Issue #21: Implement error handling for AJAX requests
+
+* Issue #4: Improve error logging - part 2 "Let them know"
+
+* Issue #3: Improve error logging - part 1 "The black holes"
 
 ### 1.0.1
 
