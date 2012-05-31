@@ -25,15 +25,15 @@
 				// mode (based on is-slave)
 				if(isset($_POST['settings']['cdi']['is-slave'])) {
 					if(CdiUtil::isCdi()) {
-						Symphony::Configuration()->set('amode', 'CdiSlave', 'cdi');
+						Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
 					} else {
-						Symphony::Configuration()->set('amode', 'CdiDBSyncSlave', 'cdi');
+						Symphony::Configuration()->set('mode', 'CdiDBSyncSlave', 'cdi');
 					}
 				} else {
 					if(CdiUtil::isCdi()) {
-						Symphony::Configuration()->set('amode', 'CdiMaster', 'cdi');
+						Symphony::Configuration()->set('mode', 'CdiMaster', 'cdi');
 					} else {
-						Symphony::Configuration()->set('amode', 'CdiDBSyncMaster', 'cdi');
+						Symphony::Configuration()->set('mode', 'CdiDBSyncMaster', 'cdi');
 					}
 				}		
 				
@@ -83,7 +83,7 @@
 				return Symphony::Configuration()->write();
 			} catch(Exception $e) {
 				Administration::instance()->Page->pageAlert(_('An error occurred while saving preferences for CDI: ') . $e->getMessage());
-				Symphony::Log()->pushToLog($e->getMessage());
+				Symphony::Log()->pushToLog('[CDI] ' . $e->getMessage(), E_ERROR, true);
 				return false;
 			}
 		}
@@ -290,9 +290,9 @@
 			$div->appendChild(new XMLElement('h3','Backup &amp; Restore',array('style' => 'margin: 5px 0;')));
 
 			if(!CdiUtil::hasDumpDBInstalled()) {
-				$div->appendChild(new XMLElement('p', 'To enable backup and restore you need to install the <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> extension (version 1.08)'));
+				$div->appendChild(new XMLElement('p', 'To enable backup and restore you need to install the <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> extension (version 1.09)'));
 			} else if(!CdiUtil::hasRequiredDumpDBVersion()) {
-				$div->appendChild(new XMLElement('p', 'Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> is not supported. Please switch to version 1.08.'));
+				$div->appendChild(new XMLElement('p', 'Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> is not supported. Please switch to version 1.09.'));
 			} else {
 				// Enable automatic backups
 				$label = Widget::Label();
@@ -500,9 +500,9 @@
 			$div = new XMLElement('div', NULL, array('class' => 'cdiExport'));
 			$div->appendChild(new XMLElement('h3','Export current Symphony database',array('style' => 'margin-bottom: 5px;')));
 			if(!CdiUtil::hasDumpDBInstalled()) {
-				$div->appendChild(new XMLElement('p', 'To enable database export functionality you need to install the <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> extension (version 1.08)'));
+				$div->appendChild(new XMLElement('p', 'To enable database export functionality you need to install the <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> extension (version 1.09)'));
 			} else if(!CdiUtil::hasRequiredDumpDBVersion()) {
-				$div->appendChild(new XMLElement('p', 'Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> is not supported. Please switch to version 1.08.'));
+				$div->appendChild(new XMLElement('p', 'Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> is not supported. Please switch to version 1.09.'));
 			} else {
 				$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
 				$button->appendChild(new XMLElement('input',null,array('value' => 'Export', 'name' => 'action[cdi_export]', 'type' => 'button', 'class' => 'cdi_export_action')));

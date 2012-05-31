@@ -13,6 +13,7 @@
 	if((!class_exists('Administration')) || !CdiUtil::isEnabled()) {
 	   	$result["status"] = "error";
 	   	$result["message"] = "You can only execute actions from within Symphony and when the CDI extension is enabled";
+		Symphony::Log()->pushToLog('[CDI] You can only execute actions from within Symphony and when the CDI extension is enabled', E_NOTICE, true);
 	} 
 	
 	// Clean the database and log files when the cdi_clear action is called
@@ -32,6 +33,7 @@
 		} catch(Exception $e) {
 			$result["status"] = "error";
 			$result["message"] = $e->getMessage();
+			Symphony::Log()->pushToLog('[CDI] ' . $e->getMessage(), E_ERROR, true);
 		}
 	}
 
@@ -44,6 +46,7 @@
 		} catch(Exception $e) {
 			$result["status"] = "error";
 			$result["message"] = $e->getMessage();
+			Symphony::Log()->pushToLog('[CDI] ' . $e->getMessage(), E_ERROR, true);
 		}
 	}
 	
@@ -62,6 +65,7 @@
 		} catch(Exception $e) {
 			$result["status"] = "error";
 			$result["message"] = $e->getMessage();
+			Symphony::Log()->pushToLog('[CDI] ' . $e->getMessage(), E_ERROR, true);
 		}
 	} 
 
@@ -73,6 +77,7 @@
 		} catch(Exception $e) {
 			$result["status"] = "error";
 			$result["message"] = $e->getMessage();
+			Symphony::Log()->pushToLog('[CDI] ' . $e->getMessage(), E_NOTICE, true);
 		}
 	} 
 	
@@ -80,6 +85,7 @@
 	else {
 	   	$result["status"] = "error";
 	   	$result["message"] = "You can only execute actions if you actually post one!";
+		Symphony::Log()->pushToLog('[CDI] You can only execute actions if you actually post one!', E_NOTICE, true);
 	}
 
 	header('Cache-Control: no-cache, must-revalidate');

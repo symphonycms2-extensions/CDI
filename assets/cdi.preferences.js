@@ -116,6 +116,8 @@ if(!window.Symphony) { var Symphony = {}; }
 								break;
 
 						}
+					} else {
+						jQuery('.cdiLoading').html("An error occurred while processing your request. Please refer to the Symphony log files for more information.");
 					}
 				});
 			}

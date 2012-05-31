@@ -1,6 +1,6 @@
 <?php
 
-	define('BLUEPRINTS_INDEX',100,false);
+	define('BLUEPRINTS_INDEX',200,false);
 	define('CDIROOT',MANIFEST . '/cdi',false);
 	define('CDI_FILENAME','cdi.sql');
 	define('CDI_FILE', CDIROOT . '/' . CDI_FILENAME);
@@ -46,14 +46,14 @@
 		}
 		
 		public static function hasDumpDBInstalled() {
-			$status = Symphony::ExtensionManager()->fetchStatus("dump_db");
-			return ($status == EXTENSION_ENABLED);
+			$status = Symphony::ExtensionManager()->fetchStatus(array('handle'=>'dump_db'));
+			return ($status[0] == EXTENSION_ENABLED);
 		}
 		
 		public static function hasRequiredDumpDBVersion() {
 			if(self::hasDumpDBInstalled()) {
 				$version = Symphony::ExtensionManager()->fetchInstalledVersion("dump_db");
-				return ($version == "1.08");
+				return ($version == "1.09");
 			} else {
 				return false; 
 			}

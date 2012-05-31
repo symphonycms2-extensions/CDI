@@ -16,6 +16,7 @@
 			}
 
 			Symphony::Configuration()->set('enabled', 'yes', 'cdi');
+			Symphony::Configuration()->set('cdi-mode', 'cdi', 'cdi');
 			Symphony::Configuration()->set('mode', 'CdiSlave', 'cdi');
 			Symphony::Configuration()->write();
 			return true;
@@ -41,6 +42,11 @@
 			return array(
 				array(
 					'page'		=> '/backend/',
+					'delegate'	=> 'PostQueryExecution',
+					'callback'	=> 'postQueryExecution'
+				),
+				array(
+					'page'		=> '/backend/',
 					'delegate'	=> 'InitaliseAdminPageHead',
 					'callback'	=> 'initaliseAdminPageHead'
 				),
@@ -55,6 +61,11 @@
 					'callback' => 'appendPreferences'
 				),
 				array(
+					'page'		=> '/system/extensions/',
+					'delegate'	=> 'ExtensionPreEnable',
+					'callback'	=> 'extensionPreEnable'
+				),
+				array(
 					'page' => '/system/preferences/',
 					'delegate' => 'Save',
 					'callback' => 'savePreferences'
@@ -66,6 +77,18 @@
 			Delegated functions
 		-------------------------------------------------------------------------*/	
 
+		public function postQueryExecution($context) {
+			CdiLogQuery::log($context['query']);		
+		}
+		
+		public function extensionPreEnable($context) {
+			foreach($context['extensions'] as $name) {
+				if($name == 'dump_db') {
+					CdiDumpDB::install();
+				}
+			}
+		}
+		
 		public function initaliseAdminPageHead($context) {
 			Administration::instance()->Page->addStylesheetToHead(URL . '/extensions/cdi/assets/cdi.css',null,10);
 			Administration::instance()->Page->addScriptToHead(URL . '/extensions/cdi/assets/cdi.preferences.js',4598); // I like random numbers
@@ -85,7 +108,6 @@
 			} else if(isset($_POST["action"]["dumpdb_restore"])) {
 				CdiDumpDB::restore();
 			}
-			
 			
 			// Create the Preferences user-interface for the CDI extension
 			$group = new XMLElement('fieldset');

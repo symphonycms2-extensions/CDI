@@ -18,7 +18,7 @@
 				return true;
 			} catch(Exception $e) {
 				Administration::instance()->Page->pageAlert(_('An error occurred while installing CDI: ') . $e->getMessage());
-				Symphony::Log()->pushToLog($e->getMessage());
+				Symphony::Log()->pushToLog('[CDI] ' . $e->getMessage(), E_ERROR, true);
 				return false;
 			}
 		}
@@ -59,7 +59,7 @@
 						require_once(EXTENSIONS . '/cdi/lib/class.cdidumpdb.php');
 						$currentBackup = CdiDumpDB::backup("automatic");
 					} else {
-						throw new Exception('You can only enable automatic backup files when the "Dump DB" extension (version 1.08) is installed and enabled.');
+						throw new Exception('You can only enable automatic backup files when the "Dump DB" extension (version 1.09) is installed and enabled.');
 					}
 				}catch (Exception $e) {
 					echo "ERROR: " . $e->getMessage() , ". Failed to backup database before update, aborting.";
