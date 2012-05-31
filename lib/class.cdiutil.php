@@ -96,6 +96,14 @@
 			$meta .= ";\n";
 			return $meta;
 		}
+		
+		/**
+		 * Generate API key for authenticating CDI Slave update request
+		 */
+		public static function generateKey(){
+			return substr(sha1(uniqid()), 0, 10);
+		}
+		
 	}
 	
 ?>

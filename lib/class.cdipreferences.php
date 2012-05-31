@@ -132,6 +132,7 @@
 					$header->appendChild(self::appendDBExport());
 				}
 			} else if(CdiUtil::isCdiSlave()) {
+				$header->appendChild(self::appendApiKey());
 				$leftColumn->appendChild(self::appendInstanceMode());
 				$rightColumn->appendChild(self::appendDumpDB());
 
@@ -565,6 +566,17 @@
 			}
 			return $div;
 		}		
+		
+		public static function appendApiKey() {
+			$div = new XMLElement('div');
+			$div->appendChild(new XMLElement('h3', 'Synchronize CDI Slave', array('style' => 'margin: 5px 0;')));
+			$frame = new XMLElement('span', null, array('class' => 'frame'));
+			$frame->appendChild(new XMLElement('a', URL . '/symphony/extension/cdi/update/' . Symphony::Configuration()->get('api_key','cdi'), array('href' => URL . '/symphony/extension/cdi/update/' . Symphony::Configuration()->get('api_key','cdi'))));
+			$div->appendChild($frame);
+			$div->appendChild(new XMLElement('p', 'Use the above URL to update this CDI Slave instance. 
+												   There is no extra configuration needed, so it is possible to automate the update process using Curl.', array('class' => 'help')));
+			return $div;
+		}
 		
 	}
 

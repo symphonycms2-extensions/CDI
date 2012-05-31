@@ -15,6 +15,8 @@
 					  `url` VARCHAR(255) NOT NULL,
 					  `query_hash` VARCHAR(255) NOT NULL)");
 				if (!file_exists(CDIROOT)) { mkdir(CDIROOT); }
+				
+				Symphony::Configuration()->set('api_key', CdiUtil::generateKey(), 'cdi');
 				return true;
 			} catch(Exception $e) {
 				Administration::instance()->Page->pageAlert(_('An error occurred while installing CDI: ') . $e->getMessage());
