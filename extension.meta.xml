@@ -14,14 +14,14 @@
 		</author>
 	</authors>
 	<releases>
-		<release version="1.1.0" date="2012-05-31" min="2.3">
+		<release version="1.1.0" date="2012-05-31" min="2.3" max="2.3.x">
 			- Updated to Symphony 2.3
 			- Fixing issues #32, #31, #21, #3, #4
 		</release>
-		<release version="1.0.1" date="2011-08-07" min="2.2.1">
+		<release version="1.0.1" date="2011-08-07" min="2.2.1" max="2.2.5">
 			- Fixing issues #5, #19 and #23
 		</release>
-		<release version="1.0.0" date="2011-07-31" min="2.2.1">
+		<release version="1.0.0" date="2011-07-31" min="2.2.1" max="2.2.5">
 			- First stable release
 			- Fixing issues #1, #2, #6, #7, #8, #14, #16, #17, #18
 		</release>
