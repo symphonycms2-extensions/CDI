@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<extension id="CDI" status="released" xmlns="http://symphony-cms.com/schemas/extension/1.0">
+<extension id="cdi" status="released" xmlns="http://symphony-cms.com/schemas/extension/1.0">
 	<name>Continuous Database Integration</name>
 	<description>Continuous Database Integration is designed to save and log structural changes to the database, allowing queries to be savely executed on other instances</description>
 	<repo type="github">https://github.com/remie/CDI</repo>
