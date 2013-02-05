@@ -14,7 +14,10 @@
 		</author>
 	</authors>
 	<releases>
-		<release version="1.1.0" date="2012-05-31" min="2.3">
+		<release version="1.1.1" date="2013-02-05" min="2.3" max="2.3.x">
+			- Fixing issue #39
+		</release>
+		<release version="1.1.0" date="2012-05-31" min="2.3" max="2.3.x">
 			- Updated to Symphony 2.3
 			- Fixing issues #32, #31, #21, #3, #4
 		</release>
