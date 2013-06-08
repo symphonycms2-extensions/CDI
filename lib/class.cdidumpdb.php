@@ -28,8 +28,8 @@
 			   	throw new Exception("You can only import the Database Synchroniser file from the Preferences page");
 			}
 
-			if(!CdiUtil::hasRequiredDumpDBVersion()) {
-				throw new Exception('Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> is not supported. Please switch to version 1.09.');
+			if(!CdiUtil::hasDumpDBInstalled()) {
+				throw new Exception('No valid version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> found. Please make sure it is installed.');
 			} else {
 				require_once(EXTENSIONS . '/dump_db/lib/class.mysqldump.php');
 				
@@ -74,8 +74,8 @@
 			   	throw new Exception("You can only restore the Symphony database from the Preferences page");
 			}
 			
-			if(!CdiUtil::hasRequiredDumpDBVersion()) {
-				throw new Exception('Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> is not supported. Please switch to version 1.09.');
+			if(!CdiUtil::hasDumpDBInstalled()) {
+				throw new Exception('No valid version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> found. Please make sure it is installed.');
 			} else {
 				require_once(EXTENSIONS . '/dump_db/lib/class.mysqlrestore.php');
 				

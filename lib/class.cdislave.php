@@ -57,11 +57,11 @@
 			// Implement automatic backup before processing structural changes
 			if(Symphony::Configuration()->get('backup-enabled', 'cdi') == 'yes') {
 				try {
-					if(CdiUtil::hasRequiredDumpDBVersion()) {
+					if(CdiUtil::hasDumpDBInstalled()) {
 						require_once(EXTENSIONS . '/cdi/lib/class.cdidumpdb.php');
 						$currentBackup = CdiDumpDB::backup("automatic");
 					} else {
-						throw new Exception('You can only enable automatic backup files when the "Dump DB" extension (version 1.09) is installed and enabled.');
+						throw new Exception('You can only enable automatic backup files when the "Dump DB" extension (version 1.10 or higher) is installed and enabled.');
 					}
 				}catch (Exception $e) {
 					echo "ERROR: " . $e->getMessage() , ". Failed to backup database before update, aborting.";

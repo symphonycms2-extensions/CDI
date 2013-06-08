@@ -8,7 +8,7 @@
 
 		public function install() {
 			if(CdiSlave::install()) {
-				if(CdiUtil::hasRequiredDumpDBVersion()) {
+				if(CdiUtil::hasDumpDBInstalled()) {
 					CdiDumpDB::install();
 				}
 			} else {

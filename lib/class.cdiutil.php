@@ -50,15 +50,6 @@
 			return ($status[0] == EXTENSION_ENABLED);
 		}
 		
-		public static function hasRequiredDumpDBVersion() {
-			if(self::hasDumpDBInstalled()) {
-				$version = Symphony::ExtensionManager()->fetchInstalledVersion("dump_db");
-				return ($version == "1.09");
-			} else {
-				return false; 
-			}
-		}
-		
 		public static function hasDisabledBlueprints() {
 			return (Symphony::Configuration()->get('disable_blueprints', 'cdi') == 'yes');
 		}

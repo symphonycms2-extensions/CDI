@@ -115,20 +115,20 @@
 				$header->appendChild(self::appendInstanceMode());
 				$header->appendChild(self::appendCdiMasterQueries());
 				
-				if(file_exists(CDI_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+				if(file_exists(CDI_FILE) && CdiUtil::hasDumpDBInstalled()) {
 					$leftColumn->appendChild(self::appendDownloadLog());
 					$leftColumn->appendChild(self::appendClearLog());
 					$rightColumn->appendChild(self::appendDBExport());
 					$rightColumn->appendChild(self::appendRestore());
-				} else if(!file_exists(CDI_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+				} else if(!file_exists(CDI_FILE) && CdiUtil::hasDumpDBInstalled()) {
 					$leftColumn->appendChild(self::appendDBExport());
 					$rightColumn->appendChild(self::appendRestore());
-				} else if(file_exists(CDI_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+				} else if(file_exists(CDI_FILE) && !CdiUtil::hasDumpDBInstalled()) {
 					$leftColumn->appendChild(self::appendDownloadLog());
 					$leftColumn->appendChild(self::appendClearLog());
 					$rightColumn->appendChild(self::appendDBExport());
 					$rightColumn->appendChild(self::appendRestore());
-				} else if(!file_exists(CDI_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+				} else if(!file_exists(CDI_FILE) && !CdiUtil::hasDumpDBInstalled()) {
 					$header->appendChild(self::appendDBExport());
 				}
 			} else if(CdiUtil::isCdiSlave()) {
@@ -136,19 +136,19 @@
 				$leftColumn->appendChild(self::appendInstanceMode());
 				$rightColumn->appendChild(self::appendDumpDB());
 
-				if(file_exists(CDI_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+				if(file_exists(CDI_FILE) && CdiUtil::hasDumpDBInstalled()) {
 					$leftColumn->appendChild(self::appendCdiSlaveQueries());
 					$leftColumn->appendChild(self::appendClearLog());
 					$rightColumn->appendChild(self::appendDBExport());
 					$rightColumn->appendChild(self::appendRestore());
-				} else if(file_exists(CDI_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+				} else if(file_exists(CDI_FILE) && !CdiUtil::hasDumpDBInstalled()) {
 					$footer->appendChild(self::appendCdiSlaveQueries());
 					$footer->appendChild(self::appendClearLog());
-				} else if(!file_exists(CDI_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+				} else if(!file_exists(CDI_FILE) && CdiUtil::hasDumpDBInstalled()) {
 					$leftColumn->appendChild(self::appendCdiSlaveQueries());
 					$rightColumn->appendChild(self::appendDBExport());
 					$footer->appendChild(self::appendRestore());
-				} else if(!file_exists(CDI_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+				} else if(!file_exists(CDI_FILE) && !CdiUtil::hasDumpDBInstalled()) {
 					$footer->appendChild(self::appendCdiSlaveQueries());
 				}
 			}
@@ -177,26 +177,26 @@
 			$footer = new XMLElement('div',null, array('class' => 'cdiFooter'));
 						
 				if(CdiUtil::isCdiDBSyncMaster()) {
-					if(file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+					if(file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasDumpDBInstalled()) {
 						$header->appendChild(self::appendInstanceMode());
 						$leftColumn->appendChild(self::appendDownloadLog());
 						$leftColumn->appendChild(self::appendClearLog());
 						$rightColumn->appendChild(self::appendDBExport());
 						$rightColumn->appendChild(self::appendRestore());
-					} else if(file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+					} else if(file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasDumpDBInstalled()) {
 						$header->appendChild(self::appendInstanceMode());
 						$leftColumn->appendChild(self::appendClearLog());
 						$rightColumn->appendChild(self::appendDumpDB());
-					} else if(!file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+					} else if(!file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasDumpDBInstalled()) {
 						$leftColumn->appendChild(self::appendInstanceMode());
 						$rightColumn->appendChild(self::appendDBExport());
 						$footer->appendChild(self::appendRestore());
-					} else if(!file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+					} else if(!file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasDumpDBInstalled()) {
 						$leftColumn->appendChild(self::appendInstanceMode());
 						$rightColumn->appendChild(self::appendDumpDB());
 					}
 				} else if(CdiUtil::isCdiDBSyncSlave()) {
-					if(file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+					if(file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasDumpDBInstalled()) {
 						$leftColumn->appendChild(self::appendInstanceMode());
 						$leftColumn->appendChild(self::appendDBSyncImport());
 						$leftColumn->appendChild(self::appendDBSyncImportFile());
@@ -204,20 +204,20 @@
 						$rightColumn->appendChild(self::appendDumpDB());
 						$rightColumn->appendChild(self::appendDBExport());
 						$rightColumn->appendChild(self::appendRestore());
-					} else if(file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+					} else if(file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasDumpDBInstalled()) {
 						$header->appendChild(self::appendInstanceMode());
 						$leftColumn->appendChild(self::appendDBSyncImport());
 						$leftColumn->appendChild(self::appendDBSyncImportFile());
 						$leftColumn->appendChild(self::appendClearLog());
 						$rightColumn->appendChild(self::appendDumpDB());
-					} else if(!file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasRequiredDumpDBVersion()) {
+					} else if(!file_exists(CDI_DB_SYNC_FILE) && CdiUtil::hasDumpDBInstalled()) {
 						$leftColumn->appendChild(self::appendInstanceMode());
 						$leftColumn->appendChild(self::appendDBSyncImport());
 						$leftColumn->appendChild(self::appendDBSyncImportFile());
 						$rightColumn->appendChild(self::appendDumpDB());
 						$rightColumn->appendChild(self::appendDBExport());
 						$footer->appendChild(self::appendRestore());
-					} else if(!file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasRequiredDumpDBVersion()) {
+					} else if(!file_exists(CDI_DB_SYNC_FILE) && !CdiUtil::hasDumpDBInstalled()) {
 						$header->appendChild(self::appendInstanceMode());
 						$leftColumn->appendChild(self::appendDBSyncImport());
 						$leftColumn->appendChild(self::appendDBSyncImportFile());
@@ -291,9 +291,7 @@
 			$div->appendChild(new XMLElement('h3','Backup &amp; Restore',array('style' => 'margin: 5px 0;')));
 
 			if(!CdiUtil::hasDumpDBInstalled()) {
-				$div->appendChild(new XMLElement('p', 'To enable backup and restore you need to install the <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> extension (version 1.09)'));
-			} else if(!CdiUtil::hasRequiredDumpDBVersion()) {
-				$div->appendChild(new XMLElement('p', 'Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> is not supported. Please switch to version 1.09.'));
+				$div->appendChild(new XMLElement('p', 'To enable backup and restore you need to install the <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> extension (version 1.10 or higher)'));
 			} else {
 				// Enable automatic backups
 				$label = Widget::Label();
@@ -354,7 +352,7 @@
 		
 		public static function appendRestore() {
 			$div = new XMLElement('div', NULL,array('style'=>'margin-bottom: 1.5em;','class' => 'cdiRestore'));
-			if(CdiUtil::hasRequiredDumpDBVersion()) {
+			if(CdiUtil::hasDumpDBInstalled()) {
 				$div->appendChild(new XMLElement('h3','Restore Symphony database',array('style' => 'margin: 5px 0;')));
 				$table = new XMLElement('table', NULL, array('cellpadding' => '0', 'cellspacing' => '0', 'border' => '0', 'style' => 'margin-bottom: 10px;'));
 				$files = CdiDumpDB::getBackupFiles();
@@ -501,9 +499,7 @@
 			$div = new XMLElement('div', NULL, array('class' => 'cdiExport'));
 			$div->appendChild(new XMLElement('h3','Export current Symphony database',array('style' => 'margin-bottom: 5px;')));
 			if(!CdiUtil::hasDumpDBInstalled()) {
-				$div->appendChild(new XMLElement('p', 'To enable database export functionality you need to install the <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> extension (version 1.09)'));
-			} else if(!CdiUtil::hasRequiredDumpDBVersion()) {
-				$div->appendChild(new XMLElement('p', 'Your current version of <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> is not supported. Please switch to version 1.09.'));
+				$div->appendChild(new XMLElement('p', 'To enable database export functionality you need to install the <a href="http://symphony-cms.com/download/extensions/view/40986/">Dump DB</a> extension (version 1.10 or higher)'));
 			} else {
 				$button = new XMLElement('div',NULL,array('style' => 'margin: 10px 0;'));
 				$button->appendChild(new XMLElement('input',null,array('value' => 'Export', 'name' => 'action[cdi_export]', 'type' => 'button', 'class' => 'cdi_export_action')));
