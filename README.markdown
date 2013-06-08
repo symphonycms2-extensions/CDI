@@ -1,6 +1,6 @@
 # Continuous Database Integration
 
-* Version: 1.1.0
+* Version: 1.1.2
 * Author: Remie Bolte <http://github.com/remie>
 * Build Date: 2012-05-31
 * Requirements: Symphony 2.3
@@ -34,6 +34,16 @@ The release milestones are listed on GitHub: <https://github.com/remie/CDI/issue
 A list of all open issues can be found here: <https://github.com/remie/CDI/issues>
 
 ## Version History
+
+### 1.1.2
+
+# Issue #37: Update DB Sync version number
+
+# Issue #38: Dump DB version supported
+
+### 1.1.1
+
+* Issue #39: Lowercase CDI
 
 ### 1.1.0
 

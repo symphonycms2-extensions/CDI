@@ -14,6 +14,9 @@
 		</author>
 	</authors>
 	<releases>
+		<release version="1.1.2" date="2013-06-08" min="2.3" max="2.3.x">
+			- Fixing issue #37, #38
+		</release>
 		<release version="1.1.1" date="2013-02-05" min="2.3" max="2.3.x">
 			- Fixing issue #39
 		</release>
@@ -30,6 +33,6 @@
 		</release>
 	</releases>
 	<dependencies>
-		<dependency version="1.09">dump_db</dependency>
+		<dependency version="1.10">dump_db</dependency>
 	</dependencies>	
 </extension>
