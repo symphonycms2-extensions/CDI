@@ -36,7 +36,7 @@
 			// un-tracked tables (sessions, cache, authors)
 			if (preg_match("/{$tbl_prefix}(authors|cache|forgotpass|sessions)/i", $query)) return true;
 			// content updates in tbl_entries (includes tbl_entries_fields_*)
-			if (preg_match('/^(insert|delete|update)/i', $query) && preg_match("/({$config->tbl_prefix}entries)/i", $query)) return true;
+			if (preg_match('/^(insert|delete|update)/i', $query) && preg_match("/({$tbl_prefix}entries)/i", $query)) return true;
 			// append query delimeter if it doesn't exist
 			if (!preg_match('/;$/', $query)) $query .= ";";
 
