@@ -1,4 +1,3 @@
-
 if(!window.Symphony) { var Symphony = {}; }
 
 (function($) {
@@ -41,7 +40,11 @@ if(!window.Symphony) { var Symphony = {}; }
 			jQuery('.manual-backup-overwrite').click(function(event) {
 				jQuery('.cdi_export_action').attr('ref',(this.checked ? "overwrite" : ""));
 			});
-		
+
+			if(jQuery('.manual-backup-overwrite').attr('checked') == 'checked'){
+			    jQuery('.cdi_export_action').attr('ref', 'overwrite');
+			}
+			
 			jQuery('input[class*="_action"]').click(function(event) {
 				Symphony.cdiExtension.processAction(this,event);
 			});
